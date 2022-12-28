@@ -46,13 +46,13 @@ class MainArgs:
   seed = 3
   stats_filename = f'stats_frankle_seed_1_i=2048_seed_3'
 
-if __name__ == 'main':
-    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    args = MainArgs()
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f'using device: {DEVICE}')
+args = MainArgs()
+torch.manual_seed(args.seed)
+torch.cuda.manual_seed(args.seed)
 
-    model = models.frankleResnet20().to(DEVICE)
-    # model.load_state_dict(torch.load('weights_frankle_seed_1_i=2048', map_location=DEVICE))
-    main(model, args, DEVICE)
+model = models.frankleResnet20().to(DEVICE)
+# model.load_state_dict(torch.load('weights_frankle_seed_1_i=2048', map_location=DEVICE))
+main(model, args, DEVICE)
 
