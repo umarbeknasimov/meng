@@ -6,14 +6,14 @@ from utils import state_dict, interpolate
 import models
 import evaluate
 import numpy as np
-def get_projection(file1, file2, file3):
-    resnet_1 = load.load_model_with_state(file1)
-    resnet_2 = load.load_model_with_state(file2)
-    resnet_center = load.load_model_with_state(file3)
+def get_projection(weights1, weights2, weights3, device):
+    resnet_1 = load.model_with_state(weights1, device)
+    resnet_2 = load.model_with_state(weights2, device)
+    resnet_center = load.model_with_state(weights3, device)
     
-    w_1 = state_dict.flatten_model_state_dict_w_o_num_batches(resnet_center)
-    w_2 = state_dict.flatten_model_state_dict_w_o_num_batches(resnet_1)
-    w_3 = state_dict.flatten_model_state_dict_w_o_num_batches(resnet_2)
+    w_1 = state_dict.flatten_model_params(resnet_center)
+    w_2 = state_dict.flatten_model_params(resnet_1)
+    w_3 = state_dict.flatten_model_params(resnet_2)
 
     assert w_1.shape == w_2.shape
     assert w_2.shape == w_3.shape
@@ -27,8 +27,8 @@ def get_projection(file1, file2, file3):
 
     return w_1, u_hat, v_hat
 
-def get_3_model_comparison(w_1, u_hat, v_hat, range, device, losses_file=None, accs_file=None, eval_data='train'):
-  x, y = torch.meshgrid([torch.arange(-10, 122, 5), torch.arange(-10, 122, 5)])
+def get_3_model_comparison(w_1, u_hat, v_hat, box_range, device, losses_file, accs_file, start_new=True, eval_data='train'):
+  x, y = torch.meshgrid([box_range, box_range])
   x = x.to(device)
   y = y.to(device)
   train_data, valid_data = dataset.get_train_val_loaders()
@@ -40,7 +40,8 @@ def get_3_model_comparison(w_1, u_hat, v_hat, range, device, losses_file=None, a
   else:
     raise ValueError()
 
-  if losses_file == None:
+  if start_new:
+    print('starting fresh')
     all_losses = np.zeros(x.shape)
     all_accs = np.zeros(x.shape)
   else:
