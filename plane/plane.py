@@ -56,12 +56,12 @@ def get_3_model_comparison(w_1, u_hat, v_hat, box_range, device, losses_file, ac
       y_i = y[i][j]
       P = w_1 + x_i * u_hat + y_i * v_hat
       model = models.frankleResnet20().to(device)
-      state_dict = state_dict.create_state_dict_w_o_batch_stats_from_x(P)
-      model.load_state_dict(state_dict)
-      interpolate.forward_pass(model)
+      state_dict_new = state_dict.create_state_dict_w_o_batch_stats_from_x(P)
+      model.load_state_dict(state_dict_new)
+      interpolate.forward_pass(model, data_loader, device)
       model.eval()
 
-      loss, acc = evaluate.evaluate_data_loader(model, data_loader)
+      loss, acc = evaluate.evaluate_data_loader(model, data_loader, device)
       
       all_losses[i][j] = loss
       all_accs[i][j] = acc
