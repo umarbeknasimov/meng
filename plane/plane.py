@@ -1,7 +1,6 @@
 from utils import load, state_dict
 import torch
 import dataset
-import torch.nn as nn
 from utils import state_dict, interpolate
 import models
 import evaluate
