@@ -41,8 +41,6 @@ def interpolate_weights_at_all_epochs(file1, name, device, file2=None, eval_data
         'accs': []
     }
 
-  criterion = nn.CrossEntropyLoss()
-
   for i in iteration_range:
     if len(stats['losses']) > i:
       print(f'skipping {i}')
