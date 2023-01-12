@@ -1,3 +1,7 @@
+'''
+script for computing the loss across a plane connecting 3 weights
+similar algorithm to garipov
+'''
 from plane import plane
 from utils import load
 import torch

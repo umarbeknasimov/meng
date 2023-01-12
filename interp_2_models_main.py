@@ -1,3 +1,6 @@
+'''
+script for computing the interpolation between 2 models (list of weights)
+'''
 from interpolate import interpolate
 import torch
 
