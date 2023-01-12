@@ -44,7 +44,6 @@ class MainArgs:
   workers = 1
   weights_filename = 'weights_frankle_seed_1_i=2048_seed_3'
   seed = 3
-  stats_filename = f'stats_frankle_seed_1_i=2048_seed_3'
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'using device: {DEVICE}')
