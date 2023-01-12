@@ -53,13 +53,13 @@ def eval_interpolation(weights1, weights2, alpha, data_loader, device, warm):
     new_state_dict = state_dict.get_state_dict_w_o_batch_stats(new_state_dict)
     model.load_state_dict(new_state_dict)
     print('running forward pass')
-    interpolate.forward_pass(model)
+    interpolate.forward_pass(model, data_loader, device)
   else:
     new_state_dict = state_dict.get_state_dict_w_o_num_batches_tracked(new_state_dict)
     model.load_state_dict(new_state_dict)
     print('not running forward pass')
-    
+
   model.eval()
-  loss, acc = evaluate_data_loader(model, data_loader)
+  loss, acc = evaluate_data_loader(model, data_loader, device)
   print(f'alpha = {alpha}, interpolation loss {loss}, acc {acc}')
   return loss, acc
