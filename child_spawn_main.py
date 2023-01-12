@@ -16,6 +16,7 @@ from utils import load
 import main
 import torch
 import models
+from args import MainArgs
 
 user_path = "/om/user/unasimov"
 parent_file = user_path + "/models/weights_frankle_seed_1"
@@ -24,13 +25,8 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parent_weights = load.load(parent_file)
 
-seed1Args = main.MainArgs()
-seed1Args.epochs = 10
-seed1Args.seed = 1
-
-seed2Args = main.MainArgs()
-seed2Args.epochs = 10
-seed2Args.seed = 2
+seed1Args = MainArgs(epochs=10, seed=1)
+seed2Args = MainArgs(epochs=10, seed=2)
 
 
 for i in range(len(parent_weights)):
