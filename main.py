@@ -17,8 +17,8 @@ def main(model, args, device):
                                   momentum=args.momentum,
                                   weight_decay=args.weight_decay)
   lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                          milestones=[33, 66], last_epoch=args.start_epoch - 1)
-  for epoch in range(args.start_epoch, args.epochs):
+                                                          milestones=[33, 66], last_epoch=-1)
+  for epoch in range(args.epochs):
 
     # train for one epoch
     print('current lr {:.5e}'.format(optimizer.param_groups[0]['lr']))

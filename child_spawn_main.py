@@ -17,13 +17,12 @@ import main
 import torch
 import models
 from args import MainArgs
+from constants import *
 
-user_path = "/om/user/unasimov"
-parent_file = user_path + "/models/weights_frankle_seed_1"
-children_dir = user_path + "/children"
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+parent_file = USER_DIR + "/models/weights_frankle_seed_1"
+children_dir = USER_DIR + "/children"
 
-parent_weights = load.load(parent_file)
+parent_weights = load.load(parent_file, DEVICE)
 
 seed1Args = MainArgs(epochs=10, seed=1)
 seed2Args = MainArgs(epochs=10, seed=2)
