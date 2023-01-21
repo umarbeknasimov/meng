@@ -28,7 +28,7 @@ seed1Args = MainArgs(epochs=10, seed=1)
 seed2Args = MainArgs(epochs=10, seed=2)
 
 
-for i in range(len(parent_weights)):
+for i in range(14, len(parent_weights)):
     # need to change weights filename
     seed1Args.weights_filename = f'{children_dir}/seed1_i={i}'
     seed2Args.weights_filename = f'{children_dir}/seed2_i={i}'

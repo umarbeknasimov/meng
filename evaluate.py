@@ -25,6 +25,8 @@ def evaluate_data_loader(model, data_loader, device):
   losses = average.AverageMeter()
   top1 = average.AverageMeter()
   criterion = nn.CrossEntropyLoss()
+  correct_ids = []
+  ids_multiplier_offset = data_loader.batch_size
 
   with torch.no_grad():
     for i, (input, target) in enumerate(data_loader):
@@ -42,7 +44,10 @@ def evaluate_data_loader(model, data_loader, device):
       prec1 = accuracy(output.data, target)[0]
       losses.update(loss.item(), input.size(0))
       top1.update(prec1.item(), input.size(0))
-  return losses.avg, top1.avg
+      
+      curr_ids_correct = ((output.data.argmax(-1) == target) == True).nonzero().squeeze()
+      correct_ids.extend((curr_ids_correct + i * ids_multiplier_offset).tolist())
+  return losses.avg, top1.avg, correct_ids
 
 def eval_interpolation(weights1, weights2, alpha, data_loader, device, warm):
   # model_1 centered at x = 0, model_2 centered at x = 1
@@ -60,6 +65,6 @@ def eval_interpolation(weights1, weights2, alpha, data_loader, device, warm):
     print('not running forward pass')
 
   model.eval()
-  loss, acc = evaluate_data_loader(model, data_loader, device)
+  loss, acc, ids = evaluate_data_loader(model, data_loader, device, True)
   print(f'alpha = {alpha}, interpolation loss {loss}, acc {acc}')
-  return loss, acc
+  return loss, acc, ids
