@@ -65,6 +65,6 @@ def eval_interpolation(weights1, weights2, alpha, data_loader, device, warm):
     print('not running forward pass')
 
   model.eval()
-  loss, acc, ids = evaluate_data_loader(model, data_loader, device, True)
+  loss, acc, ids = evaluate_data_loader(model, data_loader, device)
   print(f'alpha = {alpha}, interpolation loss {loss}, acc {acc}')
   return loss, acc, ids
