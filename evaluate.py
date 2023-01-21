@@ -46,7 +46,7 @@ def evaluate_data_loader(model, data_loader, device):
       top1.update(prec1.item(), input.size(0))
       
       curr_ids_correct = ((output.data.argmax(-1) == target) == True).nonzero().squeeze()
-      correct_ids.extend((curr_ids_correct + i * ids_multiplier_offset).tolist())
+      correct_ids.extend((curr_ids_correct + ((torch.ones(curr_ids_correct.shape) * i * ids_multiplier_offset))).tolist())
   return losses.avg, top1.avg, correct_ids
 
 def eval_interpolation(weights1, weights2, alpha, data_loader, device, warm):
