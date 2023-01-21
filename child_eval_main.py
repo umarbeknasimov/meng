@@ -47,11 +47,11 @@ for i in range(max_i + 1):
         for data in [train_loader, val_loader]:
             seed1_model = models.frankleResnet20().to(DEVICE)
             seed1_model.load_state_dict(seed1_weights[k])
-            seed1_loss, seed1_acc, seed1_ids = evaluate.evaluate_data_loader(seed1_model, data, DEVICE, True)
+            seed1_loss, seed1_acc, seed1_ids = evaluate.evaluate_data_loader(seed1_model, data, DEVICE)
 
             seed2_model = models.frankleResnet20().to(DEVICE)
             seed2_model.load_state_dict(seed2_weights[k])
-            seed2_loss, seed2_acc, seed2_ids = evaluate.evaluate_data_loader(seed2_model, data, DEVICE, True)
+            seed2_loss, seed2_acc, seed2_ids = evaluate.evaluate_data_loader(seed2_model, data, DEVICE)
 
             avg_loss, avg_acc, avg_ids = evaluate.eval_interpolation(seed1_weights[k], seed2_weights[k], 0.5, data, DEVICE, True)
             loss = [seed1_loss, seed2_loss, avg_loss]
