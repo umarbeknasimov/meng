@@ -23,4 +23,4 @@ train_loader, test_loader = dataset.get_train_test_loaders()
 
 output_location = os.path.join(USER_DIR, 'new_framework')
 model = models.frankleResnet20().to(DEVICE)
-train(model, args, standard_callbacks(args, train_loader, test_loader), train_loader, output_location)
+train(model, args, standard_callbacks(args, train_loader, test_loader), output_location, train_loader)
