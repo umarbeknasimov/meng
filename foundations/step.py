@@ -26,7 +26,7 @@ class Step:
     def from_str(s: str, iterations_per_epoch: int) -> 'Step':
         """create step from a string"""
         if 'ep' in s:
-            ep = int(s.split('ep'))[0]
+            ep = int(s.split('ep')[0])
             if s != '{}ep'.format(ep): raise ValueError('malformed string step: {}'.format(s))
             return Step.from_epoch(ep, 0, iterations_per_epoch)
 
@@ -42,7 +42,7 @@ class Step:
         return self._iteration % self._iterations_per_epoch
     
     @property
-    def epoch(self):
+    def ep(self):
         """current epoch in training"""
         return self._iteration // self._iterations_per_epoch
     
@@ -52,6 +52,8 @@ class Step:
         elif self._iterations_per_epoch != other._iterations_per_epoch:
             raise ValueError('cannot compare steps with different iterations per epoch')
 
+    def __eq__(self, other):
+        return self._iteration == other._iteration
 
     def __lt__(self, other):
         return self._iteration < other._iteration

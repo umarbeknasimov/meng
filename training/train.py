@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import copy
+from torch.utils.data import DataLoader
 
 import dataset
 from foundations.hparams import TrainingHParams
@@ -13,11 +13,11 @@ def train(
     args: TrainingHParams, 
     callbacks,
     output_location: str,
+    train_loader: DataLoader,
     start_step: Step = None, 
     end_step: Step = None):
 
     logger = MetricLogger()
-    train_loader, _ = dataset.get_train_val_loaders()
     
     iterations_per_epoch = len(train_loader)
 
@@ -27,12 +27,12 @@ def train(
                                     weight_decay=args.weight_decay)
 
     start_step = start_step or Step.zero(iterations_per_epoch)
-    end_step = end_step or Step.from_str(args.training_steps)
+    end_step = end_step or Step.from_str(args.training_steps, iterations_per_epoch)
     
     # lr_milestones is in # of iterations
     lr_milestones = [Step.from_str(x, iterations_per_epoch).iteration for x in args.milestone_steps.split(',')]
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                            milestones=lr_milestones, last_epoch=start_step.iteration - 1)
+                                                            milestones=lr_milestones)
     
     if start_step > end_step:
         return
@@ -44,7 +44,7 @@ def train(
 
             if ep == end_step.ep and it == end_step.it: return
 
-            step = Step.from_epoch(ep, it, train_loader.iterations_per_epoch)
+            step = Step.from_epoch(ep, it, iterations_per_epoch)
             for callback in callbacks: callback(output_location, step, model, optimizer, lr_scheduler, logger)
             
             target = target.to(DEVICE)

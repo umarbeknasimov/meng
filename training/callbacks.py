@@ -23,7 +23,7 @@ def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
         losses = AverageMeter()
         top1 = AverageMeter()
        
-        with torch.nograd():
+        with torch.no_grad():
             for i, (input, target) in enumerate(loader):                
                 target = target.to(DEVICE)
                 input_var = input.to(DEVICE)
@@ -92,7 +92,7 @@ def standard_callbacks(
     result = [
         run_at_step(start, save_state_dicts),
         run_at_step(end, save_state_dicts),
-        run_at_step(end, save_logger),
+        run_every_epoch(save_logger),
     ]
 
     if evaluate_every_epoch: result = [run_every_epoch(test_eval_callback)] + result
