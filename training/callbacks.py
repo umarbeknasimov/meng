@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
+import math
 
 from torch.utils.data import DataLoader
 from utils.average import AverageMeter
 from foundations.step import Step
 from foundations import paths
 from foundations.hparams import TrainingHParams
-from constants import EXPONENTIAL_STEPS, DEVICE
+from constants import DEVICE
 import evaluate
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
@@ -73,6 +74,14 @@ def run_at_steps(target_steps, callback):
         callback()
     return modified_callback
 
+def run_at_log_base_2_steps(callback):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+        log_base_2 = math.log2(step.iteration)
+        if math.ceil(log_base_2) != math.floor(log_base_2):
+            return
+        callback()
+    return modified_callback
+
 def standard_callbacks(
     args: TrainingHParams,
     train_set_loader: DataLoader, 
@@ -99,7 +108,7 @@ def standard_callbacks(
     if eval_on_train:
         if evaluate_every_epoch: result = [run_every_epoch(train_eval_callback)] + result
     
-    result = [run_at_steps(EXPONENTIAL_STEPS, save_state_dicts)] + result
+    result = [run_at_log_base_2_steps(save_state_dicts)] + result
     
     return result
 
