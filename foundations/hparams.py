@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class HParams:
+class TrainingHParams:
   training_steps: str = '100ep'
   batch_size: int = 128
   lr: float = 0.1

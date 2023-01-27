@@ -3,14 +3,14 @@ import torch.nn as nn
 import copy
 
 import dataset
-from training.hparams import HParams
+from foundations.hparams import TrainingHParams
 from foundations.step import Step
 from constants import DEVICE
 from training.metric_logger import MetricLogger
 
 def train(
     model: nn.Module, 
-    args: HParams, 
+    args: TrainingHParams, 
     callbacks,
     output_location: str,
     start_step: Step = None, 

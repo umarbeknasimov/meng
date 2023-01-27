@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from utils.average import AverageMeter
 from foundations.step import Step
 from foundations import paths
-from training.hparams import HParams
+from foundations.hparams import TrainingHParams
 from constants import EXPONENTIAL_STEPS, DEVICE
 import evaluate
 
@@ -74,7 +74,7 @@ def run_at_steps(target_steps, callback):
     return modified_callback
 
 def standard_callbacks(
-    args: HParams,
+    args: TrainingHParams,
     train_set_loader: DataLoader, 
     test_set_loader: DataLoader, 
     eval_on_train: bool = True, 

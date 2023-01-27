@@ -2,7 +2,7 @@ import os
 
 import torch
 import models
-from training.hparams import MainArgs
+from foundations.hparams import TrainingHParams
 from constants import USER_DIR, DEVICE
 from training.train import train
 from training.callbacks import standard_callbacks
@@ -14,7 +14,7 @@ from training.callbacks import standard_callbacks
 # start_step: Step = None, 
 # end_step: Step = None
 
-args = MainArgs()
+args = TrainingHParams()
 torch.manual_seed(args.seed)
 torch.cuda.manual_seed(args.seed)
 
