@@ -34,7 +34,7 @@ class Step:
     @property
     def iteration(self):
         """total number of iterations completed so far"""
-        self._iteration
+        return self._iteration
     
     @property
     def it(self):

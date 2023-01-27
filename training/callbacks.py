@@ -11,9 +11,9 @@ from constants import DEVICE
 import evaluate
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
-    torch.save(paths.state_dict('model', output_location, step), model.state_dict())
-    torch.save(paths.state_dict('optimizer', output_location, step), optimizer.state_dict())
-    torch.save(paths.state_dict('scheduler', output_location, step), scheduler.state_dict())
+    torch.save(model.state_dict(), paths.state_dict('model', output_location, step))
+    torch.save(optimizer.state_dict(), paths.state_dict('optimizer', output_location, step))
+    torch.save(scheduler.state_dict(), paths.state_dict('scheduler', output_location, step))
 
 def save_logger(output_location, step, model, optimizer, scheduler, logger):
     logger.save(output_location)
@@ -64,22 +64,23 @@ def run_at_step(target_step, callback):
     def modified_callback(output_location, step, model, optimizer, scheduler, logger):
         if step != target_step:
             return
-        callback()
+        callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 
 def run_at_steps(target_steps, callback):
     def modified_callback(output_location, step, model, optimizer, scheduler, logger):
         if step not in target_steps:
             return
-        callback()
+        callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 
 def run_at_log_base_2_steps(callback):
     def modified_callback(output_location, step, model, optimizer, scheduler, logger):
-        log_base_2 = math.log2(step.iteration)
-        if math.ceil(log_base_2) != math.floor(log_base_2):
-            return
-        callback()
+        if step.iteration != 0:
+            log_base_2 = math.log2(step.iteration)
+            if (math.ceil(log_base_2) != math.floor(log_base_2)):
+                return
+        callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 
 def standard_callbacks(

@@ -8,6 +8,9 @@ from training.train import train
 from training.callbacks import standard_callbacks
 import dataset
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 # model: nn.Module, 
 # args: HParams, 
 # callbacks,
