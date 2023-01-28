@@ -18,7 +18,7 @@ import torch
 import models
 from foundations.hparams import TrainingHParams
 from foundations.step import Step
-from training import train
+from training.train import train
 from training.callbacks import standard_callbacks
 from constants import *
 import dataset
@@ -28,28 +28,31 @@ import ssl
 
 def main():
     PARENT_SEED = 0
-    CHILD_SEEDS = [0, 1]
+    CHILD_SEEDS = [1]
 
     ssl._create_default_https_context = ssl._create_unverified_context
 
     train_loader, _ = dataset.get_train_test_loaders()
     iterations_per_epoch = len(train_loader)
-    EXPONENTIAL_STEP = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))]
+    EXPONENTIAL_STEPS = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))]
 
     parent_file = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(PARENT_SEED))
     if not os.path.exists(parent_file):
         raise ValueError('parent directory doesn\'t exist')
     children_dir = os.path.join(parent_file, 'children')
+    if not os.path.exists(children_dir):
+        os.makedirs(children_dir)
+        print('making children dir {}'.format(children_dir))
 
 
     for seed_i in CHILD_SEEDS:
-        for step in range(EXPONENTIAL_STEP):
+        for step in EXPONENTIAL_STEPS:
             parent_state_dict = torch.load(os.path.join(parent_file, 'ep{}_it{}.pth'.format(step.ep, step.it)))
-            children_dir = os.path.join(children_dir, 'ep{}_it{}', format(step.ep, step.it))
+            children_dir = os.path.join(children_dir, 'ep{}_it{}'.format(step.ep, step.it))
             child_output_location = os.path.join(children_dir, 's_{}'.format(seed_i))
             if not os.path.exists(child_output_location):
-                print('making path')
-                # os.makedirs(child_output_location)
+                print('making children output location {}'.format(child_output_location))
+                os.makedirs(child_output_location)
 
             torch.manual_seed(seed_i)
             torch.cuda.manual_seed(seed_i)
@@ -58,6 +61,7 @@ def main():
             
             model = models.frankleResnet20().to(DEVICE)
             model.load_state_dict(parent_state_dict['model'])
+            print('training child spawned from iteration {} with seed {}'.format(step.iteration, seed_i))
             train(model, args, standard_callbacks(args, train_loader, test_loader), child_output_location, train_loader, parent_state_dict['optimizer'], parent_state_dict['scheduler'])
 
 if __name__ == '__main__':
