@@ -30,7 +30,7 @@ def train(
     start_step = start_step or Step.zero(iterations_per_epoch)
     end_step = end_step or Step.from_str(args.training_steps, iterations_per_epoch)
     
-    lr_scheduler = get_lr_scheduler(args, iterations_per_epoch, init_lr_scheduler_state)
+    lr_scheduler = get_lr_scheduler(args, iterations_per_epoch, optimizer, init_lr_scheduler_state)
     
     if start_step > end_step:
         return
