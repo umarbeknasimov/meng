@@ -10,3 +10,10 @@ class TrainingHParams:
   milestone_steps: str = '50ep,75ep'
   weight_decay: float = 1e-4
   seed: int = 0
+
+@dataclass
+class ModelHParams:
+  parent_step: str = '0ep0it'
+  parent_seed: int = None
+  
+

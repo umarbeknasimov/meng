@@ -11,42 +11,54 @@ the goal of this:
  to analyze the mode connectivity of the children through various i
  to find critical i
 """
+import os
 
 from utils import load
-import main
 import torch
 import models
-from args import MainArgs
+from foundations.hparams import TrainingHParams
+from foundations.step import Step
+from training import train
+from training.callbacks import standard_callbacks
 from constants import *
-
-parent_file = USER_DIR + "/models/weights_frankle_seed_1"
-children_dir = USER_DIR + "/children"
-
-parent_weights = load.load(parent_file, DEVICE)
-
-seed1Args = MainArgs(epochs=10, seed=1)
-seed2Args = MainArgs(epochs=10, seed=2)
+import dataset
+import math
+import ssl
 
 
-for i in range(14, len(parent_weights)):
-    # need to change weights filename
-    seed1Args.weights_filename = f'{children_dir}/seed1_i={i}'
-    seed2Args.weights_filename = f'{children_dir}/seed2_i={i}'
+def main():
+    PARENT_SEED = 0
+    CHILD_SEEDS = [0, 1]
 
-    torch.manual_seed(seed1Args.seed)
-    torch.cuda.manual_seed(seed1Args.seed)
-    
-    seed1 = models.frankleResnet20().to(DEVICE)
-    seed1.load_state_dict(parent_weights[i])
-    main.main(seed1, seed1Args, DEVICE)
+    ssl._create_default_https_context = ssl._create_unverified_context
 
-    torch.manual_seed(seed2Args.seed)
-    torch.cuda.manual_seed(seed2Args.seed)
+    train_loader, _ = dataset.get_train_test_loaders()
+    iterations_per_epoch = len(train_loader)
+    EXPONENTIAL_STEP = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))]
 
-    seed2 = models.frankleResnet20().to(DEVICE)
-    seed2.load_state_dict(parent_weights[i])
-    main.main(seed2, seed2Args, DEVICE)
+    parent_file = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(PARENT_SEED))
+    if not os.path.exists(parent_file):
+        raise ValueError('parent directory doesn\'t exist')
+    children_dir = os.path.join(parent_file, 'children')
 
 
-    
+    for seed_i in CHILD_SEEDS:
+        for step in range(EXPONENTIAL_STEP):
+            parent_state_dict = torch.load(os.path.join(parent_file, 'ep{}_it{}.pth'.format(step.ep, step.it)))
+            children_dir = os.path.join(children_dir, 'ep{}_it{}', format(step.ep, step.it))
+            child_output_location = os.path.join(children_dir, 's_{}'.format(seed_i))
+            if not os.path.exists(child_output_location):
+                print('making path')
+                # os.makedirs(child_output_location)
 
+            torch.manual_seed(seed_i)
+            torch.cuda.manual_seed(seed_i)
+            train_loader, test_loader = dataset.get_train_test_loaders()
+            args = TrainingHParams(seed=seed_i)
+            
+            model = models.frankleResnet20().to(DEVICE)
+            model.load_state_dict(parent_state_dict['model'])
+            train(model, args, standard_callbacks(args, train_loader, test_loader), child_output_location, train_loader, parent_state_dict['optimizer'], parent_state_dict['scheduler'])
+
+if __name__ == '__main__':
+    main()

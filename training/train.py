@@ -7,6 +7,7 @@ from foundations.hparams import TrainingHParams
 from foundations.step import Step
 from constants import DEVICE
 from training.metric_logger import MetricLogger
+from training.optimizers import get_optimizer, get_lr_scheduler
 
 def train(
     model: nn.Module, 
@@ -15,24 +16,21 @@ def train(
     output_location: str,
     train_loader: DataLoader,
     start_step: Step = None, 
-    end_step: Step = None):
+    end_step: Step = None,
+    init_optimizer_state = None,
+    init_lr_scheduler_state = None):
 
     logger = MetricLogger()
     
     iterations_per_epoch = len(train_loader)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                    momentum=args.momentum,
-                                    weight_decay=args.weight_decay)
+    optimizer = get_optimizer(model, args, init_optimizer_state)
 
     start_step = start_step or Step.zero(iterations_per_epoch)
     end_step = end_step or Step.from_str(args.training_steps, iterations_per_epoch)
     
-    # lr_milestones is in # of iterations
-    lr_milestones = [Step.from_str(x, iterations_per_epoch).iteration for x in args.milestone_steps.split(',')]
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                            milestones=lr_milestones)
+    lr_scheduler = get_lr_scheduler(args, iterations_per_epoch, init_lr_scheduler_state)
     
     if start_step > end_step:
         return
