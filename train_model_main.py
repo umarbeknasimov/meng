@@ -24,6 +24,6 @@ torch.cuda.manual_seed(args.seed)
 
 train_loader, test_loader = dataset.get_train_test_loaders()
 
-output_location = os.path.join(USER_DIR, 'new_framework')
+output_location = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(args.seed))
 model = models.frankleResnet20().to(DEVICE)
 train(model, args, standard_callbacks(args, train_loader, test_loader), output_location, train_loader)

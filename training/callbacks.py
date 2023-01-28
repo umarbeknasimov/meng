@@ -11,7 +11,11 @@ from constants import DEVICE
 import evaluate
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
-    torch.save(model.state_dict(), paths.state_dict('model', output_location, step))
+    torch.save({
+        'model': model.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict()
+    }, paths.state_dict(output_location, step))
     torch.save(optimizer.state_dict(), paths.state_dict('optimizer', output_location, step))
     torch.save(scheduler.state_dict(), paths.state_dict('scheduler', output_location, step))
 
