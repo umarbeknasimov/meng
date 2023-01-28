@@ -15,10 +15,10 @@ def train(
     callbacks,
     output_location: str,
     train_loader: DataLoader,
-    start_step: Step = None, 
-    end_step: Step = None,
     init_optimizer_state = None,
-    init_lr_scheduler_state = None):
+    init_lr_scheduler_state = None,
+    start_step: Step = None, 
+    end_step: Step = None):
 
     logger = MetricLogger()
     
