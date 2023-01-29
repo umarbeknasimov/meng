@@ -16,11 +16,11 @@ import os
 from utils import load
 import torch
 import models
+from environment import environment
 from foundations.hparams import TrainingHParams
 from foundations.step import Step
 from training.train import train
 from training.callbacks import standard_callbacks
-from constants import *
 import dataset
 import math
 import ssl
@@ -36,7 +36,7 @@ def main():
     iterations_per_epoch = len(train_loader)
     EXPONENTIAL_STEPS = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))]
 
-    parent_file = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(PARENT_SEED))
+    parent_file = os.path.join(environment.get_user_dir(), 'parent', 's_{}'.format(PARENT_SEED))
     if not os.path.exists(parent_file):
         raise ValueError('parent directory doesn\'t exist')
     children_dir = os.path.join(parent_file, 'children')
@@ -59,7 +59,7 @@ def main():
             train_loader, test_loader = dataset.get_train_test_loaders()
             args = TrainingHParams(seed=seed_i)
             
-            model = models.frankleResnet20().to(DEVICE)
+            model = models.frankleResnet20().to(environment.device())
             model.load_state_dict(parent_state_dict['model'])
             print('training child spawned from iteration {} with seed {}'.format(step.iteration, seed_i))
             train(model, args, standard_callbacks(args, train_loader, test_loader), child_output_location, train_loader, parent_state_dict['optimizer'], parent_state_dict['scheduler'])

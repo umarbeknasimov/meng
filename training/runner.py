@@ -1,39 +1,42 @@
-import argparse
 from dataclasses import dataclass
 import os
 import torch
 
 import models
+from environment import environment
 from foundations.runner import Runner
-from foundations.hparams import TrainingHParams
-from constants import USER_DIR, DEVICE
 from training.train import train
 from training.callbacks import standard_callbacks
+from training.desc import TrainingDesc
 import dataset
 
 @dataclass
 class TrainingRunner(Runner):
-    trainingHParams: TrainingHParams
+    training_desc: TrainingDesc
     verbose: bool = True
-    evaluate_every_epoch: bool = True
 
     @staticmethod
     def description():
         return 'train a model'
     
-    @staticmethod
-    def create_from_args(args: argparse.Namespace) -> 'TrainingRunner':
-        return TrainingRunner(TrainingHParams.create_from_args(args), args.verbose, args.evaluate_every_epoch)
-    
     def run(self):
         if self.verbose:
             print('training a model')
-            torch.manual_seed(self.trainingHParams.seed)
-            torch.cuda.manual_seed(self.trainingHParams.seed)
+        output_path = self.training_desc.run_path()
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
 
-            train_loader, test_loader = dataset.get_train_test_loaders()
+        self.training_desc.save(output_path)
 
-            output_location = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(self.trainingHParams.seed))
-            model = models.frankleResnet20().to(DEVICE)
-            train(model, self.trainingHParams, standard_callbacks(self.trainingHParams, train_loader, test_loader), output_location, train_loader)
+        torch.manual_seed(self.training_desc.training_hparams.seed)
+        torch.cuda.manual_seed(self.training_desc.training_hparams.seed)
+
+        train_loader, test_loader = dataset.get_train_test_loaders()
+        model = models.frankleResnet20().to(environment.device())
+
+        if self.training_desc.init_state_dict_path():
+            init_state_dict = torch.load(self.training_desc.init_state_dict_path())
+            model.load_state_dict(init_state_dict['model'])
+            train(model, self.training_desc.training_hparams, standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader), output_path, train_loader, init_state_dict['optimizer'], init_state_dict['scheduler'])
+        train(model, self.training_desc.training_hparams, standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader), output_path, train_loader)
 

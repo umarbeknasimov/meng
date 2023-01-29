@@ -1,17 +1,15 @@
-import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import dataset
-from foundations.hparams import TrainingHParams
+from environment import environment
+from foundations.hparams import TrainingHparams
 from foundations.step import Step
-from constants import DEVICE
 from training.metric_logger import MetricLogger
-from training.optimizers import get_optimizer, get_lr_scheduler
+from training import optimizers
 
 def train(
     model: nn.Module, 
-    args: TrainingHParams, 
+    args: TrainingHparams, 
     callbacks,
     output_location: str,
     train_loader: DataLoader,
@@ -25,12 +23,12 @@ def train(
     iterations_per_epoch = len(train_loader)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = get_optimizer(model, args, init_optimizer_state)
+    optimizer = optimizers.get_optimizer(model, args, init_optimizer_state)
 
     start_step = start_step or Step.zero(iterations_per_epoch)
     end_step = end_step or Step.from_str(args.training_steps, iterations_per_epoch)
     
-    lr_scheduler = get_lr_scheduler(args, iterations_per_epoch, optimizer, init_lr_scheduler_state)
+    lr_scheduler = optimizers.get_lr_scheduler(args, iterations_per_epoch, optimizer, init_lr_scheduler_state)
     
     if start_step > end_step:
         return
@@ -45,8 +43,8 @@ def train(
             step = Step.from_epoch(ep, it, iterations_per_epoch)
             for callback in callbacks: callback(output_location, step, model, optimizer, lr_scheduler, logger)
             
-            target = target.to(DEVICE)
-            input_var = input.to(DEVICE)
+            target = target.to(environment.device())
+            input_var = input.to(environment.device())
 
             # compute output
             output = model(input_var)

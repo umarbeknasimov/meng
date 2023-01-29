@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import math
 
+from environment import environment
 from torch.utils.data import DataLoader
 from utils.average import AverageMeter
 from foundations.step import Step
 from foundations import paths
-from foundations.hparams import TrainingHParams
-from constants import DEVICE
+from foundations.hparams import TrainingHparams
 import evaluate
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
@@ -28,8 +28,8 @@ def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
        
         with torch.no_grad():
             for i, (input, target) in enumerate(loader):                
-                target = target.to(DEVICE)
-                input_var = input.to(DEVICE)
+                target = target.to(environment.device())
+                input_var = input.to(environment.device())
 
                 # compute output
                 output = model(input_var)
@@ -86,7 +86,7 @@ def run_at_log_base_2_steps(callback):
     return modified_callback
 
 def standard_callbacks(
-    args: TrainingHParams,
+    args: TrainingHparams,
     train_set_loader: DataLoader, 
     test_set_loader: DataLoader, 
     eval_on_train: bool = True, 

@@ -1,29 +1,21 @@
 import os
 
 import torch
-import models
-from foundations.hparams import TrainingHParams
-from constants import USER_DIR, DEVICE
-from training.train import train
-from training.callbacks import standard_callbacks
-import dataset
+from foundations.hparams import TrainingHparams, ModelHparams
+from training.desc import TrainingDesc
+from training.runner import TrainingRunner
 
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
+def main() :
+    ssl._create_default_https_context = ssl._create_unverified_context
+    training_hparams = TrainingHparams(seed=2)
+    model_hparams = ModelHparams()
+    training_desc = TrainingDesc(model_hparams=model_hparams, training_hparams=training_hparams)
+    runner = TrainingRunner(training_desc=training_desc)
+    runner.run()
 
-# model: nn.Module, 
-# args: HParams, 
-# callbacks,
-# output_location: str,
-# start_step: Step = None, 
-# end_step: Step = None
+if __name__ == '__main__':
+    main()
 
-args = TrainingHParams()
-torch.manual_seed(args.seed)
-torch.cuda.manual_seed(args.seed)
 
-train_loader, test_loader = dataset.get_train_test_loaders()
 
-output_location = os.path.join(USER_DIR, 'new_framework', 'parent', 's_{}'.format(args.seed))
-model = models.frankleResnet20().to(DEVICE)
-train(model, args, standard_callbacks(args, train_loader, test_loader), output_location, train_loader)
