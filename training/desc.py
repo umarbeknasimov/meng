@@ -20,5 +20,6 @@ class TrainingDesc(desc.Desc):
             self.model_hparams.init_step_seed)
     
     def init_state_dict_path(self):
-        if self.model_hparams.init_step and self.model_hparams.init_step_seed:
-            return paths.state_dict(paths.train(environment.get_user_dir(), self.model_hparams.init_step), self.model_hparams.init_step_seed)
+        init_step, init_step_seed = self.model_hparams.init_step, self.model_hparams.init_step_seed
+        if init_step and init_step_seed:
+            return paths.state_dict(paths.train(environment.get_user_dir(), init_step_seed), init_step)
