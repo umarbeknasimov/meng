@@ -3,7 +3,7 @@ from training.runner import TrainingRunner
 
 import torch
 import math
-from multiprocessing import Pool
+import sys
 
 import dataset
 from foundations.hparams import ModelHparams, TrainingHparams
@@ -24,10 +24,8 @@ def main(step: Step):
     runner.run()
 
 if __name__ == "__main__":
-    num_processes = 5
-    start_index = 1
+    index = int(sys.argv[1])
     train_loader, _ = dataset.get_train_test_loaders()
     iterations_per_epoch = len(train_loader)
-    EXPONENTIAL_STEPS = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))][start_index: start_index + 5]
-    with Pool() as pool:
-      pool.map(main, EXPONENTIAL_STEPS)
+    step_i = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))][index]
+    main(step_i)
