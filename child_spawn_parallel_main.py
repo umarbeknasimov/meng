@@ -27,5 +27,5 @@ if __name__ == "__main__":
     index = int(sys.argv[1])
     train_loader, _ = dataset.get_train_test_loaders()
     iterations_per_epoch = len(train_loader)
-    step_i = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))][index]
+    step_i = ([Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))])[index]
     main(step_i)
