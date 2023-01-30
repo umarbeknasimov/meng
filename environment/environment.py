@@ -8,4 +8,4 @@ def get_user_dir():
     return path
 
 def device():
-    torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")

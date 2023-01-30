@@ -19,6 +19,11 @@ class Step:
         return Step(iteration, iterations_per_epoch)
     
     @staticmethod
+    def from_log_base_2_iteration(iteration_log_2: int, iterations_per_epoch: int) -> 'Step':
+        if iteration_log_2 < -1: raise ValueError('iteration_log_2 must be >= -1')
+        return Step(2**(iteration_log_2), iterations_per_epoch) if iteration_log_2 != -1 else Step.zero(iterations_per_epoch)
+    
+    @staticmethod
     def from_epoch(epoch: int, iteration: int, iterations_per_epoch: int) -> 'Step':
         return Step(epoch * iterations_per_epoch + iteration, iterations_per_epoch)
     
@@ -30,7 +35,6 @@ class Step:
             if s != '{}ep'.format(ep): raise ValueError('malformed string step: {}'.format(s))
             return Step.from_epoch(ep, 0, iterations_per_epoch)
 
-    
     @property
     def iteration(self):
         """total number of iterations completed so far"""
@@ -69,5 +73,4 @@ class Step:
     
     def __str__(self):
         return 'iteration {}, iterations per epoch {}'.format(self._iteration, self._iterations_per_epoch)
-
 

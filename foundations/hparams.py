@@ -53,3 +53,12 @@ class ModelHparams(Hparams):
 
   _name: str = 'Model Hyperparameters'
 
+@dataclass
+class DatasetHparams(Hparams):
+  dataset_name: str = 'cifar10'
+  batch_size: int = 128
+  do_not_augment: bool = False
+  transformation_seed: int = None
+  subsample_fraction: float = None
+  random_labels_fraction: str = None
+
