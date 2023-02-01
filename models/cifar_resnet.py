@@ -9,14 +9,14 @@ def init_fn(w):
     w.weight.data = torch.rand(w.weight.data.shape)
     w.bias.data = torch.zeros_like(w.bias.data)
 
-class FrankleResnet(nn.Module):
+class Model(nn.Module):
     """A residual neural network as originally designed for CIFAR-10."""
 
     class Block(nn.Module):
         """A ResNet block."""
 
         def __init__(self, f_in: int, f_out: int, downsample=False):
-            super(FrankleResnet.Block, self).__init__()
+            super(Model.Block, self).__init__()
 
             stride = 2 if downsample else 1
             self.conv1 = nn.Conv2d(f_in, f_out, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -33,17 +33,13 @@ class FrankleResnet(nn.Module):
                 self.shortcut = nn.Sequential()
 
         def forward(self, x):
-            out = self.conv1(x)
-            # print(out)
-            out = self.bn1(out)
-            out = F.relu(out)
-            # out = F.relu(self.bn1(self.conv1(x)))
+            out = F.relu(self.bn1(self.conv1(x)))
             out = self.bn2(self.conv2(out))
             out += self.shortcut(x)
             return F.relu(out)
 
     def __init__(self, outputs=None):
-        super(FrankleResnet, self).__init__()
+        super(Model, self).__init__()
         outputs = outputs or 10
 
         plan = [(16, 3), (32, 3), (64, 3)]
@@ -58,7 +54,7 @@ class FrankleResnet(nn.Module):
         for segment_index, (filters, num_blocks) in enumerate(plan):
             for block_index in range(num_blocks):
                 downsample = segment_index > 0 and block_index == 0
-                blocks.append(FrankleResnet.Block(current_filters, filters, downsample))
+                blocks.append(Model.Block(current_filters, filters, downsample))
                 current_filters = filters
 
         self.blocks = nn.Sequential(*blocks)
@@ -77,9 +73,3 @@ class FrankleResnet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.fc(out)
         return out
-
-def frankleResnet20():
-    """Constructs a ResNet-20 model.
-    """
-    model = FrankleResnet()
-    return model

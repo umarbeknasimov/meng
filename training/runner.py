@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import os
 
-import models
 from environment import environment
 from foundations.runner import Runner
 from foundations.step import Step
+from models.cifar_resnet import Model
 from training.train import train
 from training.callbacks import standard_callbacks
 from training.desc import TrainingDesc
@@ -34,7 +34,7 @@ class TrainingRunner(Runner):
         train_loader = registry.get(self.training_desc.dataset_hparams)
         test_loader = registry.get(self.training_desc.dataset_hparams, False)
 
-        model = models.frankleResnet20().to(environment.device())
+        model = Model().to(environment.device())
 
         callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
 

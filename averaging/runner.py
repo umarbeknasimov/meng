@@ -1,12 +1,9 @@
 from dataclasses import dataclass
 import os
-import math
 
-import models
-from environment import environment
 from foundations.runner import Runner
 from foundations.step import Step
-from training.train import train
+from models.cifar_resnet import Model
 from training.callbacks import standard_callbacks
 from averaging.desc import AveragingDesc
 from averaging.average import average
@@ -49,7 +46,7 @@ class AveragingRunner(Runner):
         iterations_per_epoch = registry.get(train1_train2_dataset).iterations_per_epoch
         end_step = Step.from_str(train1_train2_dataset.training_steps, iterations_per_epoch)
         steps = Step.get_log_2_steps(end_step, iterations_per_epoch)
-        average(models.frankleResnet20, train1.run_path(), train2.run_path(), self.average_desc.run_path(), steps, train_loader, callbacks)
+        average(Model, train1.run_path(), train2.run_path(), self.average_desc.run_path(), steps, train_loader, callbacks)
 
         
 
