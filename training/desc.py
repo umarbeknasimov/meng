@@ -18,6 +18,6 @@ class TrainingDesc(desc.Desc):
 
     def run_path(self, experiment='main'):
         return paths.train(os.path.join(
-            environment.get_user_dir(), 
-            self.hashname,
-            experiment))
+            environment.get_user_dir(),
+            experiment, 
+            self.hashname))
