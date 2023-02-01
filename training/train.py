@@ -29,6 +29,10 @@ def train(
     end_step = end_step or Step.from_str(training_hparams.training_steps, train_loader.iterations_per_epoch)
 
     data_order_seed = training_hparams.data_order_seed
+    if data_order_seed is not None:
+        data_order_seed_generator = torch.Generator()
+        data_order_seed_generator.manual_seed(data_order_seed)
+        data_order_seed = torch.randint(int(1e8), (1,), generator=data_order_seed_generator).item()
     
     scheduler = optimizers.get_lr_scheduler(training_hparams, train_loader.iterations_per_epoch, optimizer)
     if pretrained_output_location and pretrained_step: load_pretrained(pretrained_output_location, pretrained_step, model, optimizer, scheduler)
