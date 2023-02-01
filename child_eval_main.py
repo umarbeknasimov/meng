@@ -3,7 +3,7 @@ script for evaluation the children spawned
 """
 
 from constants import *
-import dataset
+import datasets.dataset as dataset
 from utils import load
 import evaluate
 import models

@@ -89,4 +89,7 @@ class Step:
             self._iteration, 
             math.log2(self._iteration),
             self._iterations_per_epoch)
+    
+    def get_log_2_steps(end_step: 'Step', iterations_per_epoch):
+        return ([Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(end_step.iteration)))])
 

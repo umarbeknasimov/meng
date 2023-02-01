@@ -18,7 +18,7 @@ def main(step_i: int):
 
     parent_iterations_per_epoch = registry.get(parent_dataset_hparams).iterations_per_epoch
     parent_last_step = Step.from_str(parent_training_hparams.training_steps, parent_iterations_per_epoch)
-    steps = ([Step.zero(parent_iterations_per_epoch)] + [Step.from_iteration(2**i, parent_iterations_per_epoch) for i in range(int(math.log2(parent_last_step.iteration)))])
+    steps = Step.get_log_2_steps(parent_last_step, parent_iterations_per_epoch)
 
     training_hparams = TrainingHparams(data_order_seed=CHILD_SEED)
     dataset_hparams = DatasetHparams()

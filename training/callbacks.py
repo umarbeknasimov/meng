@@ -13,8 +13,8 @@ import evaluate
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
     torch.save({
         'model': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'scheduler': scheduler.state_dict()
+        'optimizer': None if optimizer is None else optimizer.state_dict(),
+        'scheduler': None if scheduler is None else scheduler.state_dict()
     }, paths.state_dict(output_location, step))
 
 def save_logger(output_location, step, model, optimizer, scheduler, logger):
