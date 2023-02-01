@@ -30,7 +30,7 @@ class Runner:
         pass
 
     @abc.abstractmethod
-    def run(self) -> None:
+    def run(self, *args) -> None:
         """run the job"""
         pass
     

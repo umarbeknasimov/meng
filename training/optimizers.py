@@ -6,19 +6,14 @@ from torch.optim.lr_scheduler import MultiStepLR
 from foundations.hparams import TrainingHparams
 from foundations.step import Step
 
-def get_optimizer(model: nn.Module, args: TrainingHparams, init_optimizer_state = None) -> Optimizer:
+def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                     momentum=args.momentum,
                                     weight_decay=args.weight_decay)
-    if init_optimizer_state:
-        optimizer.load_state_dict(init_optimizer_state)
     return optimizer
 
-def get_lr_scheduler(args: TrainingHparams, iterations_per_epoch: int, optimizer: Optimizer, init_scheduler_state = None) -> MultiStepLR:
+def get_lr_scheduler(args: TrainingHparams, iterations_per_epoch: int, optimizer: Optimizer) -> MultiStepLR:
     lr_milestones = [Step.from_str(x, iterations_per_epoch).iteration for x in args.milestone_steps.split(',')]
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                             milestones=lr_milestones)
-    
-    if init_scheduler_state:
-        lr_scheduler.load_state_dict(init_scheduler_state)
     return lr_scheduler

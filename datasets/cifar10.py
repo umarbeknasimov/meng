@@ -22,7 +22,7 @@ class Dataset(base.ImageDataset):
 
     @staticmethod
     def get_test_set():
-        train_set = torchvision.datasets.CIFAR10(train=True, root='./data', download=True)
+        train_set = torchvision.datasets.CIFAR10(train=False, root='./data', download=True)
         return Dataset(train_set.data, np.array(train_set.targets))
 
     def __init__(self, examples, labels, image_transforms=None):
