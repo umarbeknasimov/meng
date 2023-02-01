@@ -2,7 +2,6 @@ from training.desc import TrainingDesc
 from training.runner import TrainingRunner
 from datasets import registry
 
-import math
 import sys
 
 from foundations.hparams import DatasetHparams, TrainingHparams
@@ -10,7 +9,7 @@ from foundations.step import Step
 
 def main(step_i: int): 
     PARENT_SEED = 1
-    CHILD_SEED = 2
+    CHILD_SEED = 3
 
     parent_training_hparams = TrainingHparams(data_order_seed=PARENT_SEED)
     parent_dataset_hparams = DatasetHparams()

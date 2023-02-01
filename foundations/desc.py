@@ -1,7 +1,9 @@
 import abc
 from dataclasses import dataclass, fields
 import hashlib
+import os
 
+from environment import environment
 from foundations import paths
 from foundations.hparams import Hparams
 
@@ -9,9 +11,13 @@ from foundations.hparams import Hparams
 class Desc(abc.ABC):
     """bundle of hyperparams for a kind of job"""
 
-    def save(self, output_location):
-        with open(paths.hparams(output_location), 'w') as f:
+    def save_hparam(self, local_output_location, global_output_location):
+        with open(paths.hparams(local_output_location), 'w') as f:
             f.write(self.__str__())
+        
+        with open(paths.hparams(global_output_location), 'a') as f:
+            f.write(f'{self.hashname}\n\n')
+            f.write(f'{self.__str__()}\n\n')
 
     @property
     def hashname(self) -> str:

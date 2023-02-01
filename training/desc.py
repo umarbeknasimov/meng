@@ -16,7 +16,11 @@ class TrainingDesc(desc.Desc):
     @staticmethod
     def name_prefix(): return 'train'
 
-    def run_path(self, experiment='main'):
+    def run_path(self, get_outer_dir=False, experiment='main'):
+        if get_outer_dir:
+            return paths.train(os.path.join(
+            environment.get_user_dir(),
+            experiment))
         return paths.train(os.path.join(
             environment.get_user_dir(),
             experiment, 

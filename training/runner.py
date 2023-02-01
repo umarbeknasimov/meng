@@ -23,10 +23,14 @@ class TrainingRunner(Runner):
         if self.verbose:
             print(f'running {self.description()}')
         output_location = self.training_desc.run_path()
+        output_location_outer = self.training_desc.run_path(get_outer_dir=True)
         if not os.path.exists(output_location):
             os.makedirs(output_location)
+        
+        if not os.path.exists(output_location_outer):
+            os.makedirs(output_location_outer)
 
-        self.training_desc.save(output_location)
+        self.training_desc.save_hparam(output_location, output_location_outer)
         train_loader = registry.get(self.training_desc.dataset_hparams)
         test_loader = registry.get(self.training_desc.dataset_hparams, False)
 

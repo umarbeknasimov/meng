@@ -3,8 +3,7 @@ import os
 
 
 from environment import environment
-from foundations import desc, hparams, paths
-from foundations.step import Step
+from foundations import desc, paths
 from training.desc import TrainingDesc
 from foundations.hparams import DatasetHparams
 
@@ -17,8 +16,13 @@ class AveragingDesc(desc.Desc):
     @staticmethod
     def name_prefix(): return 'avg'
 
-    def run_path(self, experiment='main'):
-        return paths.train(os.path.join(
+    def run_path(self, get_outer_dir=False, experiment='main'):
+        if get_outer_dir:
+            return paths.average(os.path.join(
+                environment.get_user_dir(),
+                experiment))
+        return paths.average(os.path.join(
             environment.get_user_dir(),
             experiment, 
             self.hashname))
+

@@ -1,4 +1,5 @@
 import environment
+from datasets.base import DataLoader
 from foundations.step import Step
 from foundations import paths
 from training.metric_logger import MetricLogger
@@ -7,11 +8,11 @@ from utils import state_dict, interpolate
 
 def average(
     model_type,
-    output_location_1 : str,
-    output_location_2 : str,
+    output_location_1: str,
+    output_location_2: str,
     output_location: str,
-    steps : list[Step],
-    train_loader,
+    steps: list[Step],
+    train_loader: DataLoader,
     callbacks
     ):
 
