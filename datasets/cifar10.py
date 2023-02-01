@@ -1,5 +1,6 @@
 import torchvision
 import numpy as np
+from PIL import Image
 
 from datasets import base
 
@@ -26,6 +27,9 @@ class Dataset(base.ImageDataset):
 
     def __init__(self, examples, labels, image_transforms=None):
         super(Dataset, self).__init__(examples, labels, image_transforms or [], [torchvision.transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+
+    def example_to_img(self, example):
+        return Image.fromarray(example)
 
 
 Dataloader = base.DataLoader

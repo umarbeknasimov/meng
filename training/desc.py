@@ -3,23 +3,21 @@ import os
 
 
 from environment import environment
-from foundations import desc
-from foundations import hparams
-from foundations import paths
+from foundations import desc, hparams, paths
+from foundations.step import Step
 
 @dataclass
 class TrainingDesc(desc.Desc):
-    model_hparams: hparams.ModelHparams
+    dataset_hparams: hparams.DatasetHparams
     training_hparams: hparams.TrainingHparams
+    pretrain_training_desc: 'TrainingDesc' = None
+    pretrain_step: str = None
 
-    def run_path(self):
-        return paths.train(
+    @staticmethod
+    def name_prefix(): return 'train'
+
+    def run_path(self, experiment='main'):
+        return paths.train(os.path.join(
             environment.get_user_dir(), 
-            self.training_hparams.seed,
-            self.model_hparams.init_step, 
-            self.model_hparams.init_step_seed)
-    
-    def init_state_dict_path(self):
-        init_step, init_step_seed = self.model_hparams.init_step, self.model_hparams.init_step_seed
-        if init_step and init_step_seed:
-            return paths.state_dict(paths.train(environment.get_user_dir(), init_step_seed), init_step)
+            self.hashname,
+            experiment))

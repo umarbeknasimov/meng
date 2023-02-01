@@ -4,7 +4,7 @@ from foundations.hparams import DatasetHparams
 registered_datasets = {'cifar10': cifar10}
 
 def get(dataset_hparams: DatasetHparams, train: bool = True):
-    """get train or test set corresponding to datasset hparams"""
+    """get train or test set corresponding to dataset hparams"""
     seed = dataset_hparams.transformation_seed or 0
 
     #dataset

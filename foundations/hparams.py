@@ -42,16 +42,9 @@ class TrainingHparams(Hparams):
   momentum: float = 0.9
   milestone_steps: str = '50ep,75ep'
   weight_decay: float = 1e-4
-  seed: int = 0
+  data_order_seed: int = None
 
-  _name: str = 'Dataset Hyperparameters'
-
-@dataclass
-class ModelHparams(Hparams):
-  init_step: str = None
-  init_step_seed: int = None
-
-  _name: str = 'Model Hyperparameters'
+  _name: str = 'Training Hyperparameters'
 
 @dataclass
 class DatasetHparams(Hparams):
@@ -61,4 +54,6 @@ class DatasetHparams(Hparams):
   transformation_seed: int = None
   subsample_fraction: float = None
   random_labels_fraction: str = None
+
+  _name: str = 'Dataset Hyperparameters'
 

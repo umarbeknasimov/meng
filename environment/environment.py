@@ -2,7 +2,7 @@ import os
 import torch
 
 def get_user_dir():
-    path = os.path.join('/om', 'user', 'unasimov', 'new_framework')
+    path = os.path.join('/om', 'user', 'unasimov', 'new_models')
     if not os.path.exists(path):
         path = 'temp'
     return path

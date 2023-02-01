@@ -89,7 +89,7 @@ class ImageDataset(Dataset):
 class ShuffleSampler(torch.utils.data.sampler.Sampler):
     def __init__(self, num_examples):
         self._num_examples = num_examples
-        self._g = torch.Generator()
+        self._seed = None
     
     def __iter__(self):
         if self._seed == -1:
@@ -97,7 +97,9 @@ class ShuffleSampler(torch.utils.data.sampler.Sampler):
         elif self._seed is None:
             indices = torch.randperm(self._num_examples).tolist()
         else:
-            indices = torch.randperm(self._num_examples, generator=self._g).tolist()
+            g = torch.Generator()
+            g.manual_seed(self._seed)
+            indices = torch.randperm(self._num_examples, generator=g).tolist()
         return iter(indices)
     
     def __len__(self):
@@ -105,7 +107,6 @@ class ShuffleSampler(torch.utils.data.sampler.Sampler):
     
     def shuffle_dataorder(self, seed: int):
         self._seed = seed
-        self._g.manual_seed(self._seed)
 
 class DataLoader(torch.utils.data.DataLoader):
     """wrapper to access custom shuffling logic"""

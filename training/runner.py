@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 import os
-import torch
 
 import models
 from environment import environment
 from foundations.runner import Runner
+from foundations.step import Step
 from training.train import train
 from training.callbacks import standard_callbacks
 from training.desc import TrainingDesc
-import dataset
+from datasets import registry
 
 @dataclass
 class TrainingRunner(Runner):
@@ -21,22 +21,32 @@ class TrainingRunner(Runner):
     
     def run(self):
         if self.verbose:
-            print('training a model')
-        output_path = self.training_desc.run_path()
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
+            print(f'running {self.description()}')
+        output_location = self.training_desc.run_path()
+        if not os.path.exists(output_location):
+            os.makedirs(output_location)
 
-        self.training_desc.save(output_path)
+        self.training_desc.save(output_location)
+        train_loader = registry.get(self.training_desc.dataset_hparams)
+        test_loader = registry.get(self.training_desc.dataset_hparams, False)
 
-        torch.manual_seed(self.training_desc.training_hparams.seed)
-        torch.cuda.manual_seed(self.training_desc.training_hparams.seed)
-
-        train_loader, test_loader = dataset.get_train_test_loaders()
         model = models.frankleResnet20().to(environment.device())
 
-        if self.training_desc.init_state_dict_path():
-            init_state_dict = torch.load(self.training_desc.init_state_dict_path())
-            model.load_state_dict(init_state_dict['model'])
-            train(model, self.training_desc.training_hparams, standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader), output_path, train_loader, init_state_dict['optimizer'], init_state_dict['scheduler'])
-        train(model, self.training_desc.training_hparams, standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader), output_path, train_loader)
+        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
+
+        pretrained_output_location, pretrained_step = None, None
+        if self.training_desc.pretrain_training_desc and self.training_desc.pretrain_step:
+            pretrained_output_location = self.training_desc.pretrain_training_desc.run_path()
+            pretrained_dataset = registry.get(self.training_desc.pretrain_training_desc.dataset_hparams)
+            pretrained_step = Step.from_str(self.training_desc.pretrain_step, pretrained_dataset.iterations_per_epoch)
+
+        train(
+            model, 
+            self.training_desc.training_hparams, 
+            callbacks,
+            output_location, 
+            train_loader,
+            pretrained_output_location,
+            pretrained_step)
+
 

@@ -1,3 +1,5 @@
+import math
+
 class Step:
     """ represents a step in training
     can be either the total # of iterations or epoch & iteration within that epoch
@@ -30,10 +32,19 @@ class Step:
     @staticmethod
     def from_str(s: str, iterations_per_epoch: int) -> 'Step':
         """create step from a string"""
+        if 'ep' in s and 'it' in s:
+            ep = int(s.split('ep')[0])
+            it = int(s.split('ep')[1].split('it')[0])
+            if s != '{}ep{}it'.format(ep, it): raise ValueError('malformed string step: {}'.format(s))
+            return Step.from_iteration(ep * iterations_per_epoch + it, iterations_per_epoch)
         if 'ep' in s:
             ep = int(s.split('ep')[0])
             if s != '{}ep'.format(ep): raise ValueError('malformed string step: {}'.format(s))
             return Step.from_epoch(ep, 0, iterations_per_epoch)
+        if 'it' in s:
+            it = int(s.split('it')[0])
+            if it != '{}it'.format(it): raise ValueError('malformed string step: {}'.format(s))
+            return Step.from_iteration(it, iterations_per_epoch)
 
     @property
     def iteration(self):
@@ -72,5 +83,10 @@ class Step:
         return self._iteration >= other._iteration
     
     def __str__(self):
-        return 'iteration {}, iterations per epoch {}'.format(self._iteration, self._iterations_per_epoch)
+        return 'ep{}it{}, iteration {}, iteration log2 {}, iterations per epoch {}'.format(
+            self.ep,
+            self.it,
+            self._iteration, 
+            math.log2(self._iteration),
+            self._iterations_per_epoch)
 

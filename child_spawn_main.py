@@ -19,7 +19,7 @@ import torch
 import math
 import ssl
 
-import dataset
+import datasets.dataset as dataset
 from foundations.hparams import ModelHparams, TrainingHparams
 from foundations.step import Step
 
@@ -33,7 +33,7 @@ def main() :
     iterations_per_epoch = len(train_loader)
     EXPONENTIAL_STEPS = [Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(100*iterations_per_epoch)))]
 
-    for step in EXPONENTIAL_STEPS:    
+    for step in EXPONENTIAL_STEPS:
         torch.manual_seed(CHILD_SEED)
         torch.cuda.manual_seed(CHILD_SEED)
         model_hparams = ModelHparams(init_step=step, init_step_seed=PARENT_SEED)
