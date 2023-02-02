@@ -1,4 +1,4 @@
-import environment
+from environment import environment
 from datasets.base import DataLoader
 from foundations.step import Step
 from foundations import paths

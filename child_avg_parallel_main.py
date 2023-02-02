@@ -27,7 +27,7 @@ def main(step_i: int, parent_seed: int, child1_seed: int, child2_seed: int):
     parent_step = steps[step_i]
     child1_training_desc = TrainingDesc(dataset_hparams=child1_dataset_hparams, training_hparams=child1_training_hparams, pretrain_training_desc=parent_training_desc, pretrain_step=f'{parent_step.ep}ep{parent_step.it}it')
     child2_training_desc = TrainingDesc(dataset_hparams=child2_dataset_hparams, training_hparams=child2_training_hparams, pretrain_training_desc=parent_training_desc, pretrain_step=f'{parent_step.ep}ep{parent_step.it}it')
-    avg_runner = AveragingRunner(AveragingDesc(child1_training_desc, child2_training_desc, parent_dataset_hparams))
+    avg_runner = AveragingRunner(average_desc=AveragingDesc(train1=child1_training_desc, train2=child2_training_desc, dataset_hparams=parent_dataset_hparams))
     avg_runner.run()
 
 if __name__ == "__main__":

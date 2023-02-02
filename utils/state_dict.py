@@ -1,5 +1,5 @@
 import torch
-import models
+from models.cifar_resnet import Model
 
 def flatten_state_dict(state_dict):
     vec = None
@@ -31,7 +31,7 @@ def flatten_model_params(model):
     return vec
 
 def get_state_dict_w_o_batch_stats(state_dict):
-    model = models.frankleResnet20()
+    model = Model()
     new_state_dict = {}
     for name, param in model.state_dict().items():
         if 'num_batches_tracked' in name or 'mean' in name or 'var' in name:
@@ -41,7 +41,7 @@ def get_state_dict_w_o_batch_stats(state_dict):
     return new_state_dict
 
 def get_state_dict_w_o_num_batches_tracked(state_dict):
-    model = models.frankleResnet20()
+    model = Model()
     new_state_dict = {}
     for name, param in model.state_dict().items():
         if 'num_batches_tracked' in name:
@@ -51,7 +51,7 @@ def get_state_dict_w_o_num_batches_tracked(state_dict):
     return new_state_dict
 
 def create_state_dict_w_o_batch_stats_from_x(x):
-    model = models.frankleResnet20()
+    model = Model()
     state_dict = {}
     x_start = 0
     for name, param in model.state_dict().items():
@@ -69,7 +69,7 @@ def create_state_dict_w_o_batch_stats_from_x(x):
     return state_dict
 
 def create_state_dict_w_o_num_batches_tracked_from_x(x):
-    model = models.frankleResnet20()
+    model = Model()
     state_dict = {}
     x_start = 0
     for name, param in model.state_dict().items():
