@@ -11,7 +11,7 @@ class Hparams(abc.ABC):
   def add_args(cls, parser, defaults: 'Hparams' = None, 
     name: str = None, description: str = None, create_group: bool = False):
     if defaults and not isinstance(defaults, cls):
-      raise ValueError(f'deafults must also be type {cls}')
+      raise ValueError(f'defaults must also be type {cls}')
     
     for field in fields(cls):
       if field.name.startswith('_'): continue
