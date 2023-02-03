@@ -27,6 +27,7 @@ def main(parent_seed: int, child1_seed: int, child2_seed: int):
     child2_dataset_hparams = DatasetHparams()
 
     for parent_step in steps:
+        print(f'getting info for parent step {parent_step}')
         child1_training_desc = TrainingDesc(dataset_hparams=child1_dataset_hparams, training_hparams=child1_training_hparams, pretrain_training_desc=parent_training_desc, pretrain_step=f'{parent_step.ep}ep{parent_step.it}it')
         child2_training_desc = TrainingDesc(dataset_hparams=child2_dataset_hparams, training_hparams=child2_training_hparams, pretrain_training_desc=parent_training_desc, pretrain_step=f'{parent_step.ep}ep{parent_step.it}it')
         save_logger_from_desc(child1_training_desc, result)
@@ -42,7 +43,7 @@ def save_logger_from_desc(desc, result):
     if not os.path.exists(desc.run_path()):
         print(f'path to desc \n {desc} does not exist')
     with open(paths.logger(desc.run_path()), 'r') as f:
-        result[desc.run_path()] = f.read()
+        result[desc.hashname] = f.read()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
