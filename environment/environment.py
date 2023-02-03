@@ -3,8 +3,8 @@ import torch
 
 def get_user_dir():
     path = os.path.join('/om', 'user', 'unasimov', 'runs')
-    if not os.path.exists(path):
-        path = 'temp'
+    # if not os.path.exists(path):
+    #     path = 'temp'
     return path
 
 def device():
