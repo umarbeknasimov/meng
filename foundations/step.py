@@ -87,7 +87,7 @@ class Step:
             self.ep,
             self.it,
             self._iteration, 
-            math.log2(self._iteration),
+            -1 if self._iteration == 0 else math.log2(self._iteration),
             self._iterations_per_epoch)
     
     def get_log_2_steps(end_step: 'Step', iterations_per_epoch):
