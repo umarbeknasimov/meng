@@ -20,7 +20,7 @@ class MetricLogger:
         if len(s.strip()) == 0:
             return logger
         rows = [row.split(',') for row in s.split('\n')]
-        logger.log = {(name, int(iteration)): value for name, iteration, value in rows}
+        logger.log = {(name, int(iteration)): float(value) for name, iteration, value in rows}
         return logger     
     
     @staticmethod
