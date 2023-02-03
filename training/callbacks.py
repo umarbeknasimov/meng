@@ -115,7 +115,8 @@ def standard_callbacks(
     result = [
         run_at_log_base_2_steps(save_state_dicts), 
         run_at_log_base_2_steps(train_eval_callback),
-        run_at_log_base_2_steps(test_eval_callback)] + result
+        run_at_log_base_2_steps(test_eval_callback),
+        run_at_log_base_2_steps(save_logger)] + result
     
     return result
 

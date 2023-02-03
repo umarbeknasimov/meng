@@ -40,7 +40,7 @@ def main(parent_seed: int, child1_seed: int, child2_seed: int):
 
 def save_logger_from_desc(desc, result):
     if not os.path.exists(desc.run_path()):
-        print(f'desc \n {desc} does not exist')
+        print(f'path to desc \n {desc} does not exist')
     with open(paths.logger(desc.run_path()), 'r') as f:
         result[desc.run_path()] = f.read()
 
