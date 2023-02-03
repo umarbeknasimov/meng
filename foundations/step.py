@@ -43,7 +43,7 @@ class Step:
             return Step.from_epoch(ep, 0, iterations_per_epoch)
         if 'it' in s:
             it = int(s.split('it')[0])
-            if it != '{}it'.format(it): raise ValueError('malformed string step: {}'.format(s))
+            if s != '{}it'.format(it): raise ValueError('malformed string step: {}'.format(s))
             return Step.from_iteration(it, iterations_per_epoch)
 
     @property
