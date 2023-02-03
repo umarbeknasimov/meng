@@ -24,6 +24,7 @@ class AveragingRunner(Runner):
         train1 = self.average_desc.train1
         train2 = self.average_desc.train2
 
+        #TODO add more checks to verify children can be averaged
         if train1.training_hparams.training_steps != train2.training_hparams.training_steps: 
             raise ValueError(f'{train1.training_hparams.training_steps} training steps for train1 does not equal {train2.training_hparams.training_steps} training steps for train2')
 

@@ -25,7 +25,6 @@ def average(
         new_state_dict = interpolate.interpolate_state_dicts_from_weights(weights1, weights2, 0.5)
         new_state_dict = state_dict.get_state_dict_w_o_batch_stats(new_state_dict)
         model.load_state_dict(new_state_dict)
-        print('running forward pass')
         interpolate.forward_pass(model, train_loader)
 
         for callback in callbacks: callback(output_location, step, model, None, None, logger)
