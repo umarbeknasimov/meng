@@ -9,7 +9,7 @@ class MetricLogger:
         self.log[(name, step.iteration)] = value
     
     def get(self, name: str, step: Step):
-        return self.log((name, step.iteration))
+        return self.log[(name, step.iteration)]
 
     def __str__(self):
         return '\n'.join('{},{},{}'.format(k[0], k[1], v) for k, v in self.log.items())
