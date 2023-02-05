@@ -11,14 +11,10 @@ from foundations.hparams import Hparams
 class Desc(abc.ABC):
     """bundle of hyperparams for a kind of job"""
 
-    def save_hparam(self, local_output_location, global_output_location):
+    def save_hparam(self, local_output_location):
         with open(paths.hparams(local_output_location), 'w') as f:
-            f.write(self.__str__())
+            f.write(str(self))
         
-        with open(paths.hparams(global_output_location), 'a') as f:
-            f.write(f'{self.hashname}\n\n')
-            f.write(f'{self.__str__()}\n\n')
-
     @property
     def hashname(self) -> str:
         """The name under which experiments with these hyperparameters will be stored."""
@@ -38,5 +34,6 @@ class Desc(abc.ABC):
                 hparams_strs.append(fields_dict[k].run_path())
             elif fields_dict[k] is not None:
                 hparams_strs.append(fields_dict[k])
+        hparams_strs.append(self.hashname)
         return '\n'.join(hparams_strs)
     

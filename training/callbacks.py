@@ -8,47 +8,31 @@ from utils.average import AverageMeter
 from foundations.step import Step
 from foundations import paths
 from foundations.hparams import TrainingHparams
-import evaluate
+from utils.evaluate import evaluate, accuracy
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
     torch.save({
         'model': model.state_dict(),
-        'optimizer': None if optimizer is None else optimizer.state_dict(),
-        'scheduler': None if scheduler is None else scheduler.state_dict()
+        'optimizer': optimizer.state_dict(),
+        'scheduler': scheduler.state_dict()
     }, paths.state_dict(output_location, step))
+
+def save_model(output_location, step, model, optimizer, scheduler, logger):
+    torch.save(model.state_dict(), paths.model(output_location, step))
 
 def save_logger(output_location, step, model, optimizer, scheduler, logger):
     logger.save(output_location)
 
 def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
     def eval_callback(output_location, step, model, optimizer, scheduler, logger):
-        criterion = nn.CrossEntropyLoss()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-       
-        with torch.no_grad():
-            for i, (input, target) in enumerate(loader):                
-                target = target.to(environment.device())
-                input_var = input.to(environment.device())
+        loss, accurary = evaluate(model, loader)
 
-                # compute output
-                output = model(input_var)
-                loss = criterion(output, target)
-
-                output = output.float()
-                loss = loss.float()
-
-                # measure accuracy and record loss
-                prec1 = evaluate.accuracy(output.data, target)[0]
-                losses.update(loss.cpu().item(), input.cpu().size(0))
-                top1.update(prec1.cpu().item(), input.cpu().size(0))
-
-            logger.add('{}_loss'.format(eval_name), step, losses.avg)
-            logger.add('{}_accuracy'.format(eval_name), step, top1.avg)
+        logger.add('{}_loss'.format(eval_name), step, loss)
+        logger.add('{}_accuracy'.format(eval_name), step, accurary)
         
         if verbose:
             print('{}\tep: {:03d}\tit {:03d}\tloss {:.3f}\tacc {:.2f}'.format(
-                    eval_name, step.ep, step.it, losses.avg, top1.avg))
+                    eval_name, step.ep, step.it, loss, accurary))
     return eval_callback
 
 #callback frequencies
@@ -78,10 +62,11 @@ def run_at_steps(target_steps, callback):
 
 def run_at_log_base_2_steps(callback):
     def modified_callback(output_location, step, model, optimizer, scheduler, logger):
-        if step.iteration != 0:
-            log_base_2 = math.log2(step.iteration)
-            if (math.ceil(log_base_2) != math.floor(log_base_2)):
-                return
+        if step.iteration == 0:
+            return
+        log_base_2 = math.log2(step.iteration)
+        if (math.ceil(log_base_2) != math.floor(log_base_2)):
+            return
         callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 

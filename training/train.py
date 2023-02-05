@@ -2,19 +2,21 @@ import torch
 import torch.nn as nn
 
 from environment import environment
-from foundations.hparams import TrainingHparams
+from foundations.hparams import TrainingHparams, DatasetHparams
 from foundations.step import Step
 from datasets.base import DataLoader
+import datasets
+from training.callbacks import standard_callbacks
 from training.metric_logger import MetricLogger
 from training import optimizers
 from training.pre_trained import load_pretrained
 
 def train(
-    model: nn.Module, 
     training_hparams: TrainingHparams, 
-    callbacks,
-    output_location: str,
+    model: nn.Module,
     train_loader: DataLoader,
+    output_location: str,
+    callbacks,
     pretrained_output_location: str = None,
     pretrained_step: Step = None,
     start_step: Step = None, 
@@ -39,7 +41,7 @@ def train(
     
     if start_step > end_step:
         return
-    for ep in range(start_step.ep, end_step.ep):
+    for ep in range(start_step.ep, end_step.ep + 1):
         train_loader.shuffle(None if data_order_seed is None else (data_order_seed + ep))
         for it, (input, target) in enumerate(train_loader):
 
@@ -64,3 +66,27 @@ def train(
             optimizer.step()
 
             scheduler.step()
+
+def standard_train(
+  model: nn.Module,
+  output_location: str,
+  dataset_hparams: DatasetHparams,
+  training_hparams: TrainingHparams,
+  pretrained_output_location: str = None,
+  pretrained_step: Step = None,
+  start_step: Step = None,
+  verbose: bool = True,
+  evaluate_every_epoch: bool = True
+):
+    """Train using the standard callbacks according to the provided hparams."""
+
+    # # If the model file for the end of training already exists in this location, do not train.
+    # iterations_per_epoch = datasets.registry.iterations_per_epoch(dataset_hparams)
+    # train_end_step = Step.from_str(training_hparams.training_steps, iterations_per_epoch)
+
+    train_loader = datasets.registry.get(dataset_hparams, train=True)
+    test_loader = datasets.registry.get(dataset_hparams, train=False)
+    callbacks = standard_callbacks(
+        training_hparams, train_loader, test_loader, start_step=start_step,
+        verbose=verbose, evaluate_every_epoch=evaluate_every_epoch)
+    train(training_hparams, model, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, start_step=start_step)

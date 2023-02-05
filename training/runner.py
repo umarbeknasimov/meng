@@ -31,12 +31,9 @@ class TrainingRunner(Runner):
         callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
 
         output_location = self.training_desc.run_path()
-        output_location_outer = self.training_desc.run_path(get_outer_dir=True)
         if not os.path.exists(output_location):
             os.makedirs(output_location)
-        if not os.path.exists(output_location_outer):
-            os.makedirs(output_location_outer)
-        self.training_desc.save_hparam(output_location, output_location_outer)
+        self.training_desc.save_hparam(output_location)
 
         pretrained_output_location, pretrained_step = None, None
         if self.training_desc.pretrain_training_desc and self.training_desc.pretrain_step:

@@ -10,17 +10,11 @@ from foundations.step import Step
 class TrainingDesc(desc.Desc):
     dataset_hparams: hparams.DatasetHparams
     training_hparams: hparams.TrainingHparams
-    pretrain_training_desc: 'TrainingDesc' = None
-    pretrain_step: str = None
 
     @staticmethod
     def name_prefix(): return 'train'
 
-    def run_path(self, get_outer_dir=False, experiment='main'):
-        if get_outer_dir:
-            return paths.train(os.path.join(
-            environment.get_user_dir(),
-            experiment))
+    def run_path(self, experiment='main'):
         return paths.train(os.path.join(
             environment.get_user_dir(),
             experiment, 
