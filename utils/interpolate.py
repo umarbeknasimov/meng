@@ -15,8 +15,9 @@ def average_state_dicts(weights):
   if len(weights) <= 0:
     raise ValueError(f'can only average > 0 weights but got {len(weights)} weights')
   new_state_dict = {}
-  for param_tensor in weights[0]:
-    new_state_dict[param_tensor] = torch.mean(torch.stack([weight[param_tensor] for weight in weights]), dim=0)
+  for param_name in weights[0]:
+    stacked_weights = torch.stack([weight[param_name] for weight in weights], dim=0).to(torch.float64)
+    new_state_dict[param_name] = torch.mean(stacked_weights, dim=0)
   return new_state_dict
 
 def forward_pass(model, dataloader):

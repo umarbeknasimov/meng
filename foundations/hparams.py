@@ -29,6 +29,16 @@ class Hparams(abc.ABC):
       d[field.name] = getattr(args, arg_name)
     return cls(**d)
   
+  @classmethod
+  def create_from_dict(cls, args: dict, prefix: str = None) -> 'Hparams':
+    d = {}
+    for field in fields(cls):
+      arg_name = field.name
+      if arg_name.startswith('_'): continue
+      if arg_name not in args: raise ValueError(f'Missing argument: {arg_name}')
+      d[field.name] = args[arg_name]
+    return cls(**d)
+  
   @property
   def display(self):
     defined_fields = '\n'.join([f'     * {f.name} -> {getattr(self, f.name)}' for f in fields(self) if not f.name.startswith('_')])

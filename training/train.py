@@ -11,9 +11,9 @@ from training.metric_logger import MetricLogger
 from training import optimizers
 from training.pre_trained import load_pretrained
 
-def train(
-    training_hparams: TrainingHparams, 
+def train( 
     model: nn.Module,
+    training_hparams: TrainingHparams,
     train_loader: DataLoader,
     output_location: str,
     callbacks,
@@ -89,4 +89,4 @@ def standard_train(
     callbacks = standard_callbacks(
         training_hparams, train_loader, test_loader, start_step=start_step,
         verbose=verbose, evaluate_every_epoch=evaluate_every_epoch)
-    train(training_hparams, model, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, start_step=start_step)
+    train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, start_step=start_step)

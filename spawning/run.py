@@ -9,11 +9,10 @@ from foundations import paths
 from models.cifar_resnet import Model
 from spawning.desc import SpawningDesc
 from training import train
-from training.callbacks import standard_callbacks
 from training import pre_trained
 from training.metric_logger import MetricLogger
 from training.callbacks import create_eval_callback, save_logger, save_model
-from utils import interpolate, state_dict, evaluate
+from utils import interpolate, state_dict
 
 @dataclass
 class SpawningRunner(Runner):
@@ -26,6 +25,7 @@ class SpawningRunner(Runner):
     
     def _train(self):
         location = self.desc.run_path('parent')
+        environment.exists_or_makedirs(location)
         all_spawn_steps_saved = True
         for spawn_step in self.desc.spawn_steps:
             if not os.path.exists(paths.state_dict(location, spawn_step)):
@@ -51,6 +51,7 @@ class SpawningRunner(Runner):
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
             print('pretraning args exist')
             location = self.desc.run_path('pretrain')
+            environment.exists_or_makedirs(location)
             if os.path.exists(paths.state_dict(location, self.desc.pretrain_end_step)): 
                 print('pretrain model already exists')
                 return
@@ -61,11 +62,13 @@ class SpawningRunner(Runner):
             train.standard_train(model, location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams)
     
     def _spawn_and_train(self, spawn_step, data_order_seed):
-        training_hparams=TrainingHparams(
-            *asdict(self.desc.training_hparams), data_order_seed=data_order_seed
-        )
-        output_location = paths.spawn_instance(self.desc.run_path('pretrain'), spawn_step, data_order_seed)
-        print(f'child at spawn step {spawn_step.ep}ep{spawn_step.it}it')
+        modified_parent_training_hparams = asdict(self.desc.training_hparams)
+        modified_parent_training_hparams['data_order_seed'] = data_order_seed
+        print('modified parent training hparams ', modified_parent_training_hparams)
+        training_hparams=TrainingHparams.create_from_dict(modified_parent_training_hparams)
+        output_location = paths.spawn_instance(self.desc.run_path('children'), spawn_step, data_order_seed)
+        environment.exists_or_makedirs(output_location)
+        print(f'child at spawn step {spawn_step.ep}ep{spawn_step.it}it with seed {data_order_seed}')
         if os.path.exists(paths.state_dict(output_location, self.desc.train_end_step)): 
             print(f'child already exists')
             return
@@ -74,18 +77,21 @@ class SpawningRunner(Runner):
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.desc.run_path('parent'), spawn_step)
     
     def _average(self, spawn_step, seeds):
-        train_loader = registry.get(self.desc.training_hparams)
-        test_loader = registry.get(self.desc.training_hparams, False)
+        print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep}ep{spawn_step.it}it')
+        train_loader = registry.get(self.desc.dataset_hparams)
+        test_loader = registry.get(self.desc.dataset_hparams, False)
         test_eval_callback = create_eval_callback('test', test_loader)
         train_eval_callback = create_eval_callback('train', train_loader)
         callbacks = [test_eval_callback, train_eval_callback, save_logger, save_model]
-        for child_step in self.spawning_desc.children_saved_steps:
-            logger = MetricLogger()
+        logger = MetricLogger()
+        output_location = paths.spawn_average(self.desc.run_path('children'), spawn_step, seeds)
+        environment.exists_or_makedirs(output_location)
+        for child_step in self.desc.children_saved_steps:
             weights = []
             for data_order_seed in seeds:
                 weights.append(
                     pre_trained.get_pretrained_model_state_dict(
-                        paths.spawn_instance(self.desc.run_path('pretrain'), spawn_step, data_order_seed), 
+                        paths.spawn_instance(self.desc.run_path('children'), spawn_step, data_order_seed), 
                         child_step))
             model = Model().to(environment.device())
             averaged_weights = interpolate.average_state_dicts(weights)
@@ -93,7 +99,7 @@ class SpawningRunner(Runner):
             model.load_state_dict(averaged_weights_wo_batch_stats)
             interpolate.forward_pass(model, train_loader)
             for callback in callbacks: callback(
-                paths.spawn_average(self.desc.run_path('pretrain'), spawn_step),
+                output_location,
                 child_step,
                 model,
                 None,
@@ -104,10 +110,6 @@ class SpawningRunner(Runner):
     def run(self):
         print(f'running {self.description()}')
 
-        output_location = self.desc.run_path()
-        if not os.path.exists(output_location):
-            os.mkdir(output_location)
-
         self.desc.save_hparam(self.desc.run_path())
         
         self._pretrain()
@@ -115,7 +117,9 @@ class SpawningRunner(Runner):
         
         seeds = [int(seed) for seed in self.children_data_order_seeds.split(',')]
 
-        for spawn_step in self.spawning_desc.spawn_steps:
+        print(f'spawning children with seeds {seeds}')
+
+        for spawn_step in self.desc.spawn_steps:
             for data_order_seed in seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
             self._average(spawn_step, seeds)

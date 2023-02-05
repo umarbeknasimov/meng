@@ -12,6 +12,7 @@ def train(root): return os.path.join(root, 'train')
 
 def average(root): return os.path.join(root, 'average')
 
-def spawn_instance(root, step, seed): return os.path.join(root, f'{step.ep}ep{step.it}it', seed)
+def spawn_instance(root, step, seed): return os.path.join(root, f'{step.ep}ep{step.it}it', f'seed__{seed}')
 
-def spawn_average(root, step): return os.path.join(root, f'average__{step.ep}ep{step.it}it')
+def spawn_average(root, step, seeds): 
+    return os.path.join(root, f'{step.ep}ep{step.it}it', f'average__seeds{",".join([str(seed) for seed in seeds])}')

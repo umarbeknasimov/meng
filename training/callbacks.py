@@ -81,6 +81,7 @@ def standard_callbacks(
     
     iterations_per_epoch = len(train_set_loader)
     start = start_step or Step.zero(iterations_per_epoch)
+    print('training steps ', args.training_steps)
     end = Step.from_str(args.training_steps, iterations_per_epoch)
 
     test_eval_callback = create_eval_callback('test', test_set_loader, verbose=verbose)

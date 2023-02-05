@@ -3,8 +3,8 @@ import torch
 
 def get_user_dir():
     path = os.path.join('/om', 'user', 'unasimov', 'runs')
-    # if not os.path.exists(path):
-    #     path = 'temp'
+    if not os.path.exists(path):
+        path = 'temp'
     return path
 
 def device():
@@ -18,6 +18,11 @@ def exists(file):
 
 def makedirs(path):
     return os.makedirs(path)
+
+def exists_or_makedirs(path):
+    if not exists(path):
+        return makedirs(path)
+    return True
 
 def save_model(model, path, *args, **kwargs):
     return torch.save(model, path, *args, **kwargs)

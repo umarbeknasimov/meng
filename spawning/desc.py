@@ -20,10 +20,12 @@ class SpawningDesc(desc.Desc):
     def name_prefix(): return 'spawn'
 
     def run_path(self, part='main'):
-        return os.path.join(
+        path = os.path.join(
             environment.get_user_dir(), 
             self.hashname,
             part)
+        environment.exists_or_makedirs(path)
+        return path
     
     def str_to_step(self, s: str, pretrain: bool = False) -> Step:
         dataset_hparams = self.pretrain_dataset_hparams if pretrain else self.dataset_hparams
