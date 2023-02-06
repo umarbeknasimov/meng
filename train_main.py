@@ -1,5 +1,4 @@
 import argparse
-import torch
 
 from foundations.hparams import TrainingHparams, DatasetHparams
 from training.desc import TrainingDesc
@@ -17,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int)
     parser.add_argument('--experiment', type=str)
     args = parser.parse_args()
-    main(parser.seed, parser.experiment)
+    main(args.seed, args.experiment)
 
 
 
