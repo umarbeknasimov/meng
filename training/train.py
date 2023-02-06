@@ -5,12 +5,12 @@ from environment import environment
 from foundations.hparams import TrainingHparams, DatasetHparams
 from foundations.step import Step
 from datasets.base import DataLoader
-import datasets
+from datasets import registry
 from training.callbacks import standard_callbacks
 from training.checkpointing import restore_checkpoint
 from training.metric_logger import MetricLogger
 from training import optimizers
-from training.pre_trained import load_pretrained
+from training.pretrain import load_pretrained
 
 def train( 
     model: nn.Module,
@@ -87,8 +87,8 @@ def standard_train(
     # iterations_per_epoch = datasets.registry.iterations_per_epoch(dataset_hparams)
     # train_end_step = Step.from_str(training_hparams.training_steps, iterations_per_epoch)
 
-    train_loader = datasets.registry.get(dataset_hparams, train=True)
-    test_loader = datasets.registry.get(dataset_hparams, train=False)
+    train_loader = registry.get(dataset_hparams, train=True)
+    test_loader = registry.get(dataset_hparams, train=False)
     callbacks = standard_callbacks(
         training_hparams, train_loader, test_loader, start_step=start_step,
         verbose=verbose, evaluate_every_epoch=evaluate_every_epoch)

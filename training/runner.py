@@ -1,18 +1,15 @@
 from dataclasses import dataclass
-import os
 
 from environment import environment
 from foundations.runner import Runner
-from foundations.step import Step
 from models.cifar_resnet import Model
-from training.train import train
-from training.callbacks import standard_callbacks
+from training.train import standard_train
 from training.desc import TrainingDesc
-from datasets import registry
 
 @dataclass
 class TrainingRunner(Runner):
     training_desc: TrainingDesc
+    experiment: str = 'main'
     verbose: bool = True
 
     @staticmethod
@@ -23,31 +20,20 @@ class TrainingRunner(Runner):
         if self.verbose:
             print(f'running {self.description()}')
 
-        train_loader = registry.get(self.training_desc.dataset_hparams)
-        test_loader = registry.get(self.training_desc.dataset_hparams, False)
+        # train_loader = registry.get(self.training_desc.dataset_hparams)
+        # test_loader = registry.get(self.training_desc.dataset_hparams, False)
+        # callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
 
         model = Model().to(environment.device())
 
-        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
-
-        output_location = self.training_desc.run_path()
-        if not os.path.exists(output_location):
-            os.makedirs(output_location)
+        output_location = self.training_desc.run_path(self.experiment)
+        environment.exists_or_makedirs(output_location)
         self.training_desc.save_hparam(output_location)
 
-        pretrained_output_location, pretrained_step = None, None
-        if self.training_desc.pretrain_training_desc and self.training_desc.pretrain_step:
-            pretrained_output_location = self.training_desc.pretrain_training_desc.run_path()
-            pretrained_dataset = registry.get(self.training_desc.pretrain_training_desc.dataset_hparams)
-            pretrained_step = Step.from_str(self.training_desc.pretrain_step, pretrained_dataset.iterations_per_epoch)
-
-        train(
+        standard_train(
             model, 
-            self.training_desc.training_hparams, 
-            callbacks,
-            output_location, 
-            train_loader,
-            pretrained_output_location,
-            pretrained_step)
+            output_location,
+            self.training_desc.dataset_hparams,
+            self.training_desc.training_hparams)
 
 

@@ -24,8 +24,8 @@ def exists_or_makedirs(path):
         return makedirs(path)
     return True
 
-def save_model(model, path, *args, **kwargs):
-    return torch.save(model, path, *args, **kwargs)
+def save(obj, path, *args, **kwargs):
+    return torch.save(obj, path, *args, **kwargs)
 
-def load_model(path, *args, **kwargs):
+def load(path, *args, **kwargs):
     return torch.load(path, *args, **kwargs)

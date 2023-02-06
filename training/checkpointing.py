@@ -5,7 +5,7 @@ from training.metric_logger import MetricLogger
 from environment import environment
 
 def save_checkpoint_callback(output_location, step, model, optimizer, scheduler, logger):
-    torch.save({
+    environment.save({
         'model': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scheduler': scheduler.state_dict(),
@@ -18,7 +18,7 @@ def restore_checkpoint(output_location, model, optimizer, scheduler, iterations_
     checkpoint_location = paths.checkpoint(output_location)
     if not environment.exists(checkpoint_location):
         return None, None
-    checkpoint = torch.load(checkpoint_location)
+    checkpoint = environment.load(checkpoint_location)
 
     model.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])

@@ -15,10 +15,7 @@ class TrainingDesc(desc.Desc):
     def name_prefix(): return 'train'
 
     def run_path(self, experiment='main'):
-        path = paths.train(os.path.join(
+        return paths.train(os.path.join(
             environment.get_user_dir(),
             experiment, 
             self.hashname))
-        if not os.path.exists(path):
-            os.makedirs(path)
-        return path

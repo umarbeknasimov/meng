@@ -5,12 +5,11 @@ from datasets.base import DataLoader
 from foundations import paths
 from utils.evaluate import evaluate
 
-def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
+def save_optim(output_location, step, model, optimizer, scheduler, logger):
     torch.save({
-        'model': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scheduler': scheduler.state_dict()
-    }, paths.state_dict(output_location, step))
+    }, paths.optim(output_location, step))
 
 def save_model(output_location, step, model, optimizer, scheduler, logger):
     torch.save(model.state_dict(), paths.model(output_location, step))

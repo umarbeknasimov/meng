@@ -24,8 +24,6 @@ class SpawningRunner(Runner):
     def _train(self):
         location = self.desc.run_path('parent')
         environment.exists_or_makedirs(location)
-
-        return #TODO: remove
         
         if registry.exists(location, self.desc.train_end_step): 
             print('train model already exists')
@@ -66,15 +64,14 @@ class SpawningRunner(Runner):
         model = Model().to(environment.device())
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.desc.run_path('parent'), spawn_step)
     
-    def _average(self, spawn_step, seeds):
+    def _average(self, spawn_step_location, spawn_step, seeds):
         print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
 
-        output_location = paths.spawn_average(self.desc.run_path('children'), spawn_step, seeds)
-        weights_location = paths.spawn_step(self.desc.run_path('children'), spawn_step)
+        output_location = paths.spawn_average(spawn_step_location, seeds)
         for child_step in self.desc.children_saved_steps:
             if registry.exists(output_location, child_step):
                 continue
-            standard_average(self.desc.dataset_hparams, output_location, weights_location, seeds, child_step)
+            standard_average(self.desc.dataset_hparams, output_location, spawn_step_location, seeds, child_step)
             
         
     def run(self):
@@ -88,9 +85,10 @@ class SpawningRunner(Runner):
 
         print(f'spawning children with seeds {seeds}')
         for spawn_step in self.desc.spawn_steps:
-            # for data_order_seed in seeds:
-            #     self._spawn_and_train(spawn_step, data_order_seed)
-            self._average(spawn_step, seeds)
+            spawn_step_location = paths.spawn_step(self.desc.run_path('children'), spawn_step)
+            for data_order_seed in seeds:
+                self._spawn_and_train(spawn_step, data_order_seed)
+            self._average(spawn_step_location, spawn_step, seeds)
 
 
                 

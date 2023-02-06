@@ -2,10 +2,9 @@ import torch.nn as nn
 import math
 
 from datasets.base import DataLoader
-from foundations.callbacks import create_eval_callback, save_logger, save_state_dicts
+from foundations.callbacks import create_eval_callback, save_logger, save_model, save_optim
 from foundations.step import Step
 from foundations.hparams import TrainingHparams
-from utils.evaluate import evaluate, accuracy
 from training import checkpointing
 
 #callback frequencies
@@ -42,6 +41,10 @@ def run_at_log_base_2_steps(callback):
             return
         callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
+
+def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
+    save_optim(output_location, step, model, optimizer, scheduler, logger)
+    save_model(output_location, step, model, optimizer, scheduler, logger)
 
 def standard_callbacks(
     args: TrainingHparams,

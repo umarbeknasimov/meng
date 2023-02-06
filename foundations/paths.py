@@ -8,7 +8,7 @@ def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
 
 def hparams(root): return os.path.join(root, 'hparams')
 
-def state_dict(root, step): return os.path.join(root, f'state_dict{_step(step)}.pth')
+def optim(root, step): return os.path.join(root, f'optim{_step(step)}.pth')
 
 def model(root, step): return os.path.join(root, f'model{_step(step)}.pth')
 
