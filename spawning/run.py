@@ -84,6 +84,8 @@ class SpawningRunner(Runner):
         output_location = paths.spawn_average(self.desc.run_path('children'), spawn_step, seeds)
         environment.exists_or_makedirs(output_location)
         for child_step in self.desc.children_saved_steps:
+            if environment.exists(paths.model(output_location, child_step)):
+                continue
             weights = []
             for data_order_seed in seeds:
                 weights.append(
