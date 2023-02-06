@@ -23,6 +23,8 @@ def train(
     start_step: Step = None, 
     end_step: Step = None):
 
+    environment.exists_or_makedirs(output_location)
+
     criterion = nn.CrossEntropyLoss()
     optimizer = optimizers.get_optimizer(model, training_hparams)
     scheduler = optimizers.get_lr_scheduler(training_hparams, train_loader.iterations_per_epoch, optimizer)

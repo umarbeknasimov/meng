@@ -61,6 +61,10 @@ class Step:
         """current epoch in training"""
         return self._iteration // self._iterations_per_epoch
     
+    @property
+    def ep_it_str(self):
+        return f'{self.ep}ep{self.it}it'
+    
     def _check(self, other):
         if not isinstance(other. Step):
             raise ValueError('invalid type for other: {}'.format(type(other)))

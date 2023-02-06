@@ -1,7 +1,7 @@
 
 import abc
 import argparse
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, asdict
 import copy
 
 @dataclass
@@ -38,6 +38,16 @@ class Hparams(abc.ABC):
       if arg_name not in args: raise ValueError(f'Missing argument: {arg_name}')
       d[field.name] = args[arg_name]
     return cls(**d)
+  
+  @staticmethod
+  def create_from_instance_and_dict(instance: 'Hparams', args: dict, prefix: str = None) -> 'Hparams':
+    instance_dict = asdict(instance)
+    for field_name in args:
+      if field_name not in instance_dict:
+        raise ValueError(f'dict contains incorrect field name {field_name}')
+      instance_dict[field_name] = args[field_name]
+    return instance.create_from_dict(instance_dict, prefix)
+      
   
   @property
   def display(self):

@@ -1,40 +1,12 @@
-import torch
 import torch.nn as nn
 import math
 
-from environment import environment
 from datasets.base import DataLoader
-from utils.average import AverageMeter
+from foundations.callbacks import create_eval_callback, save_logger, save_state_dicts
 from foundations.step import Step
-from foundations import paths
 from foundations.hparams import TrainingHparams
 from utils.evaluate import evaluate, accuracy
 from training import checkpointing
-
-def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
-    torch.save({
-        'model': model.state_dict(),
-        'optimizer': optimizer.state_dict(),
-        'scheduler': scheduler.state_dict()
-    }, paths.state_dict(output_location, step))
-
-def save_model(output_location, step, model, optimizer, scheduler, logger):
-    torch.save(model.state_dict(), paths.model(output_location, step))
-
-def save_logger(output_location, step, model, optimizer, scheduler, logger):
-    logger.save(output_location)
-
-def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
-    def eval_callback(output_location, step, model, optimizer, scheduler, logger):
-        loss, accurary = evaluate(model, loader)
-
-        logger.add('{}_loss'.format(eval_name), step, loss)
-        logger.add('{}_accuracy'.format(eval_name), step, accurary)
-        
-        if verbose:
-            print('{}\tep: {:03d}\tit {:03d}\tloss {:.3f}\tacc {:.2f}'.format(
-                    eval_name, step.ep, step.it, loss, accurary))
-    return eval_callback
 
 #callback frequencies
 def run_every_epoch(callback):
