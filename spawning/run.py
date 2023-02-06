@@ -26,26 +26,23 @@ class SpawningRunner(Runner):
     def _train(self):
         location = self.desc.run_path('parent')
         environment.exists_or_makedirs(location)
-        all_spawn_steps_saved = True
-        for spawn_step in self.desc.spawn_steps:
-            if not os.path.exists(paths.state_dict(location, spawn_step)):
-                all_spawn_steps_saved = False
-                break
-        if not all_spawn_steps_saved:
-            print('not all spawn steps saved so running train on parent')
-            model = Model().to(environment.device())
-            if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
-                pretrain_output_location = self.desc.run_path('pretrain')
-                train.standard_train(
-                    model, location, self.desc.dataset_hparams, 
-                    self.desc.training_hparams, pretrain_output_location, 
-                    self.desc.pretrain_end_step)
-            else:
-                train.standard_train(
-                    model, location, self.desc.dataset_hparams, 
-                    self.desc.training_hparams)
+        
+        if os.path.exists(paths.state_dict(location, self.desc.train_end_step)): 
+            print('train model already exists')
+            return
+
+        print('not all spawn steps saved so running train on parent')
+        model = Model().to(environment.device())
+        if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
+            pretrain_output_location = self.desc.run_path('pretrain')
+            train.standard_train(
+                model, location, self.desc.dataset_hparams, 
+                self.desc.training_hparams, pretrain_output_location, 
+                self.desc.pretrain_end_step)
         else:
-            print('all spawn steps saved so not running train on parent')
+            train.standard_train(
+                model, location, self.desc.dataset_hparams, 
+                self.desc.training_hparams)
     
     def _pretrain(self):
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:

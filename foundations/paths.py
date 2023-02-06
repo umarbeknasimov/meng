@@ -2,6 +2,8 @@ import os
 
 def logger(root): return os.path.join(root, 'logger')
 
+def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
+
 def hparams(root): return os.path.join(root, 'hparams')
 
 def state_dict(root, step): return os.path.join(root, f'state_dict__ep{step.ep}_it{step.it}.pth')

@@ -3,12 +3,13 @@ import torch.nn as nn
 import math
 
 from environment import environment
-from torch.utils.data import DataLoader
+from datasets.base import DataLoader
 from utils.average import AverageMeter
 from foundations.step import Step
 from foundations import paths
 from foundations.hparams import TrainingHparams
 from utils.evaluate import evaluate, accuracy
+from training import checkpointing
 
 def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
     torch.save({
@@ -79,10 +80,9 @@ def standard_callbacks(
     start_step: Step = None,
     evaluate_every_epoch: bool = True):
     
-    iterations_per_epoch = len(train_set_loader)
-    start = start_step or Step.zero(iterations_per_epoch)
+    start = start_step or Step.zero(train_set_loader.iterations_per_epoch)
     print('training steps ', args.training_steps)
-    end = Step.from_str(args.training_steps, iterations_per_epoch)
+    end = Step.from_str(args.training_steps, train_set_loader.iterations_per_epoch)
 
     test_eval_callback = create_eval_callback('test', test_set_loader, verbose=verbose)
     train_eval_callback = create_eval_callback('train', train_set_loader, verbose=verbose)
@@ -92,6 +92,7 @@ def standard_callbacks(
         run_at_step(end, save_state_dicts),
         run_at_step(end, save_logger),
         run_every_epoch(save_logger),
+        run_every_epoch(checkpointing.save_checkpoint_callback)
     ]
 
     if evaluate_every_epoch: result = [run_every_epoch(test_eval_callback)] + result
