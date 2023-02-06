@@ -80,9 +80,12 @@ class SpawningRunner(Runner):
         test_eval_callback = create_eval_callback('test', test_loader)
         train_eval_callback = create_eval_callback('train', train_loader)
         callbacks = [test_eval_callback, train_eval_callback, save_logger, save_model]
-        logger = MetricLogger()
         output_location = paths.spawn_average(self.desc.run_path('children'), spawn_step, seeds)
         environment.exists_or_makedirs(output_location)
+        if environment.exists(paths.logger(output_location)):
+            logger = MetricLogger.create_from_file(output_location)
+        else:
+            logger = MetricLogger()
         for child_step in self.desc.children_saved_steps:
             if environment.exists(paths.model(output_location, child_step)):
                 continue
