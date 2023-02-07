@@ -20,5 +20,5 @@ def spawn_step(root, step): return os.path.join(root, _step(step))
 
 def seed(root, seed): return os.path.join(root, f'seed{seed}')
 
-def spawn_average(root, step, seeds): 
-    return os.path.join(root, _step(step), f'average{",".join([str(seed) for seed in seeds])}')
+def average(root, seeds): 
+    return os.path.join(root, f'average{",".join([str(seed) for seed in seeds])}')
