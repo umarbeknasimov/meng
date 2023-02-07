@@ -1,4 +1,3 @@
-import torch
 from foundations import paths
 from foundations.step import Step
 from training.metric_logger import MetricLogger

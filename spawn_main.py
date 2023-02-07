@@ -17,8 +17,6 @@ def main(parent_seed, children_seeds):
     )
 
     spawning_runner.run()
-    
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -25,7 +25,7 @@ class SpawningRunner(Runner):
         location = self.desc.run_path('parent')
         environment.exists_or_makedirs(location)
         
-        if registry.exists(location, self.desc.train_end_step): 
+        if registry.state_dicts_exist(location, self.desc.train_end_step): 
             print('train model already exists')
             return
 
@@ -44,7 +44,7 @@ class SpawningRunner(Runner):
     
     def _pretrain(self):
         output_location = self.desc.run_path('pretrain')
-        if registry.exists(output_location, self.desc.pretrain_end_step): 
+        if registry.state_dicts_exist(output_location, self.desc.pretrain_end_step): 
             print('pretrain model already exists')
             return
         print('pretrain model doesn\'t exist so running pretrain')
@@ -57,7 +57,7 @@ class SpawningRunner(Runner):
             self.desc.training_hparams, {'data_order_seed': data_order_seed})
         output_location = paths.seed(paths.spawn_step(self.desc.run_path('children'), spawn_step), data_order_seed)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
-        if registry.exists(output_location, self.desc.train_end_step):
+        if registry.state_dicts_exist(output_location, self.desc.train_end_step):
             print(f'child already exists')
             return
         print(f'child doesn\'t exist so running train')
@@ -69,7 +69,7 @@ class SpawningRunner(Runner):
 
         output_location = paths.spawn_average(spawn_step_location, seeds)
         for child_step in self.desc.children_saved_steps:
-            if registry.exists(output_location, child_step):
+            if registry.model_exists(output_location, child_step):
                 continue
             standard_average(self.desc.dataset_hparams, output_location, spawn_step_location, seeds, child_step)
             
@@ -88,7 +88,8 @@ class SpawningRunner(Runner):
             spawn_step_location = paths.spawn_step(self.desc.run_path('children'), spawn_step)
             for data_order_seed in seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
-            self._average(spawn_step_location, spawn_step, seeds)
+            if len(seeds) > 1:
+                self._average(spawn_step_location, spawn_step, seeds)
 
 
                 
