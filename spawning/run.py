@@ -74,17 +74,26 @@ class SpawningRunner(Runner):
             standard_average(self.desc.dataset_hparams, output_location, spawn_step_location, seeds, child_step)
             
         
-    def run(self):
+    def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
 
         self.desc.save_hparam(self.desc.run_path())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams: self._pretrain()
         
-        self._train()
+        # self._train()
         seeds = [int(seed) for seed in self.children_data_order_seeds.split(',')]
 
         print(f'spawning children with seeds {seeds}')
-        for spawn_step in self.desc.spawn_steps:
+        indices = []
+        # for running parallel slurm job tasks
+        if spawn_step_index:
+            print(f'running for only spawn step index {spawn_step_index}')
+            indices = [spawn_step_index, spawn_step_index + 1]
+        else:
+            print(f'running for all spawn steps')
+            indices = [0, len(self.desc.spawn_steps)]
+        for spawn_step_i in indices:
+            spawn_step = self.desc.spawn_steps[spawn_step_i]
             spawn_step_location = paths.spawn_step(self.desc.run_path('children'), spawn_step)
             for data_order_seed in seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
