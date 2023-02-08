@@ -7,9 +7,15 @@ def main(parent_seed, children_seeds, spawn_step_index):
     training_hparams = TrainingHparams(data_order_seed=parent_seed)
     dataset_hparams = DatasetHparams()
 
+    pretrain_training_hparams = TrainingHparams()
+    pretrain_dataset_hparams = DatasetHparams(random_labels_fraction=1.0)
+
     spawning_desc = SpawningDesc(
         training_hparams=training_hparams,
-        dataset_hparams=dataset_hparams)
+        dataset_hparams=dataset_hparams,
+        pretrain_dataset_hparams=pretrain_dataset_hparams,
+        pretrain_training_hparams=pretrain_training_hparams
+    )
     
     spawning_runner = SpawningRunner(
         desc=spawning_desc,

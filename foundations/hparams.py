@@ -72,7 +72,7 @@ class DatasetHparams(Hparams):
   do_not_augment: bool = False
   transformation_seed: int = None
   subsample_fraction: float = None
-  random_labels_fraction: str = None
+  random_labels_fraction: float = None
 
   _name: str = 'Dataset Hyperparameters'
 
