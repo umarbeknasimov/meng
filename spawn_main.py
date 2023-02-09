@@ -7,7 +7,15 @@ def main(parent_seed, children_seeds, spawn_step_index):
     training_hparams = TrainingHparams(data_order_seed=parent_seed)
     dataset_hparams = DatasetHparams()
 
-    pretrain_training_hparams = TrainingHparams()
+    # adverserial pretraining
+    # https://github.com/chao1224/BadGlobalMinima/blob/master/cifar10/adversarial_init_pre_train.py
+    pretrain_training_hparams = TrainingHparams(
+        training_steps='350ep',
+        momentum=0,
+        milestone_steps='150ep,250ep',
+        weight_decay=0
+    )
+
     pretrain_dataset_hparams = DatasetHparams(random_labels_fraction=1.0)
 
     spawning_desc = SpawningDesc(
