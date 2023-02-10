@@ -68,7 +68,8 @@ def train(
             loss.backward()
             optimizer.step()
 
-            scheduler.step()
+            if scheduler is not None:
+                scheduler.step()
 
 def standard_train(
   model: nn.Module,

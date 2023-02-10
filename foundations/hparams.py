@@ -56,10 +56,11 @@ class Hparams(abc.ABC):
 
 @dataclass
 class TrainingHparams(Hparams):
-  training_steps: str = '100ep'
+  training_steps: str = '160ep'
   lr: float = 0.1
+  gamma: float = 0.1
   momentum: float = 0.9
-  milestone_steps: str = '50ep,75ep'
+  milestone_steps: str = '80ep,120ep'
   weight_decay: float = 1e-4
   data_order_seed: int = None
 

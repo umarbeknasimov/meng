@@ -8,7 +8,7 @@ from utils.evaluate import evaluate
 def save_optim(output_location, step, model, optimizer, scheduler, logger):
     torch.save({
         'optimizer': optimizer.state_dict(),
-        'scheduler': scheduler.state_dict()
+        'scheduler': None if scheduler is None else scheduler.state_dict()
     }, paths.optim(output_location, step))
 
 def save_model(output_location, step, model, optimizer, scheduler, logger):

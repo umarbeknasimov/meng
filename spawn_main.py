@@ -10,9 +10,9 @@ def main(parent_seed, children_seeds, spawn_step_index):
     # adverserial pretraining
     # https://github.com/chao1224/BadGlobalMinima/blob/master/cifar10/adversarial_init_pre_train.py
     pretrain_training_hparams = TrainingHparams(
-        training_steps='350ep',
+        training_steps='1000ep',
         momentum=0,
-        milestone_steps='150ep,250ep',
+        milestone_steps=None,
         weight_decay=0
     )
 

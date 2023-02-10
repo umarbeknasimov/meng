@@ -13,6 +13,8 @@ def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
     return optimizer
 
 def get_lr_scheduler(args: TrainingHparams, iterations_per_epoch: int, optimizer: Optimizer) -> MultiStepLR:
+    if args.milestone_steps is None:
+        return None
     lr_milestones = [Step.from_str(x, iterations_per_epoch).iteration for x in args.milestone_steps.split(',')]
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                             milestones=lr_milestones)
