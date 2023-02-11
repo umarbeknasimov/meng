@@ -10,6 +10,7 @@ from foundations.step import Step
 class TrainingDesc(desc.Desc):
     dataset_hparams: hparams.DatasetHparams
     training_hparams: hparams.TrainingHparams
+    model_hparams: hparams.ModelHparams
 
     @staticmethod
     def name_prefix(): return 'train'

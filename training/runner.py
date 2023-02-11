@@ -3,9 +3,9 @@ from datasets import registry
 
 from environment import environment
 from foundations.runner import Runner
-from models.cifar_resnet import Model
+from models import registry
 from training.callbacks import run_every_epoch, save_state_dicts, standard_callbacks
-from training.train import standard_train, train
+from training.train import train
 from training.desc import TrainingDesc
 
 @dataclass
@@ -28,12 +28,10 @@ class TrainingRunner(Runner):
         if self.save_every_epoch:
             callbacks.append(run_every_epoch(save_state_dicts))
 
-        model = Model().to(environment.device())
+        model = registry.get(self.training_desc.model_hparams).to(environment.device())
 
         output_location = self.training_desc.run_path(self.experiment)
         environment.exists_or_makedirs(output_location)
         self.training_desc.save_hparam(output_location)
 
         train(model, self.training_desc.training_hparams, train_loader, output_location, callbacks)
-
-
