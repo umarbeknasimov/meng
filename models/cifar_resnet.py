@@ -38,13 +38,9 @@ class Model(nn.Module):
             out += self.shortcut(x)
             return F.relu(out)
 
-    def __init__(self, outputs=None):
+    def __init__(self, plan, outputs=None):
         super(Model, self).__init__()
         outputs = outputs or 10
-
-        # plan = [(16, 3), (32, 3), (64, 3)] resnet20
-
-        plan = [(16, 8), (32, 8), (64, 8)] #resnet50
 
         # Initial convolution.
         current_filters = plan[0][0]
@@ -75,3 +71,41 @@ class Model(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.fc(out)
         return out
+    
+    @staticmethod
+    def is_valid_model_name(model_name):
+        return (model_name.startswith('cifar_resnet_') and
+                5 > len(model_name.split('_')) > 2 and
+                all([x.isdigit() and int(x) > 0 for x in model_name.split('_')[2:]]) and
+                (int(model_name.split('_')[2]) - 2) % 6 == 0 and
+                int(model_name.split('_')[2]) > 2)
+    
+    @staticmethod
+    def get_model_from_name(model_name,  outputs=10):
+        """The naming scheme for a ResNet is 'cifar_resnet_N[_W]'.
+        The ResNet is structured as an initial convolutional layer followed by three "segments"
+        and a linear output layer. Each segment consists of D blocks. Each block is two
+        convolutional layers surrounded by a residual connection. Each layer in the first segment
+        has W filters, each layer in the second segment has 32W filters, and each layer in the
+        third segment has 64W filters.
+        The name of a ResNet is 'cifar_resnet_N[_W]', where W is as described above.
+        N is the total number of layers in the network: 2 + 6D.
+        The default value of W is 16 if it isn't provided.
+        For example, ResNet-20 has 20 layers. Exclusing the first convolutional layer and the final
+        linear layer, there are 18 convolutional layers in the blocks. That means there are nine
+        blocks, meaning there are three blocks per segment. Hence, D = 3.
+        The name of the network would be 'cifar_resnet_20' or 'cifar_resnet_20_16'.
+        """
+
+        if not Model.is_valid_model_name(model_name):
+            raise ValueError('Invalid model name: {}'.format(model_name))
+
+        name = model_name.split('_')
+        W = 16 if len(name) == 3 else int(name[3])
+        D = int(name[2])
+        if (D - 2) % 3 != 0:
+            raise ValueError('Invalid ResNet depth: {}'.format(D))
+        D = (D - 2) // 6
+        plan = [(W, D), (2*W, D), (4*W, D)]
+
+        return Model(plan, outputs)

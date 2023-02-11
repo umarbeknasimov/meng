@@ -2,7 +2,7 @@ import os
 
 from dataclasses import dataclass
 from foundations import desc
-from foundations.hparams import TrainingHparams, DatasetHparams
+from foundations.hparams import ModelHparams, TrainingHparams, DatasetHparams
 from foundations.step import Step
 from datasets import registry
 from foundations import desc, paths
@@ -12,6 +12,7 @@ from environment import environment
 class SpawningDesc(desc.Desc):
     training_hparams: TrainingHparams
     dataset_hparams: DatasetHparams
+    model_hparams: ModelHparams
     pretrain_training_hparams: TrainingHparams = None
     pretrain_dataset_hparams: DatasetHparams = None
     

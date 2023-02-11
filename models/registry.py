@@ -1,5 +1,7 @@
 from environment import environment
 from foundations import paths
+from foundations.hparams import ModelHparams
+from models.cifar_resnet import Model
 
 def model_exists(save_location, save_step):
     return environment.exists(paths.model(save_location, save_step))
@@ -15,3 +17,6 @@ def get_model_state_dict(output_location, step):
 
 def get_optim_state_dict(output_location, step):
     return environment.load(paths.optim(output_location, step))
+
+def get(model_hparams: ModelHparams):
+    return Model.get_model_from_name(model_hparams.model_name)

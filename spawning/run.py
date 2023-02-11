@@ -1,7 +1,4 @@
-import os
-
 from dataclasses import dataclass
-from datasets import registry
 from environment import environment
 from foundations.runner import Runner
 from foundations.hparams import TrainingHparams
@@ -30,7 +27,7 @@ class SpawningRunner(Runner):
             return
 
         print('not all spawn steps saved so running train on parent')
-        model = Model().to(environment.device())
+        model = registry.get(self.desc.model_hparams).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
             pretrain_output_location = self.desc.run_path('pretrain')
             train.standard_train(
@@ -49,7 +46,7 @@ class SpawningRunner(Runner):
             return
         print('pretrain model doesn\'t exist so running pretrain')
     
-        model = Model().to(environment.device())
+        model = registry.get(self.desc.model_hparams).to(environment.device())
         train.standard_train(model, output_location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams)
     
     def _spawn_and_train(self, spawn_step, data_order_seed):
@@ -61,7 +58,7 @@ class SpawningRunner(Runner):
             print(f'child already exists')
             return
         print(f'child doesn\'t exist so running train')
-        model = Model().to(environment.device())
+        model = registry.get(self.desc.model_hparams).to(environment.device())
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.desc.run_path('parent'), spawn_step)
     
     def _average(self, spawn_step, seeds):

@@ -1,5 +1,5 @@
 import argparse
-from foundations.hparams import DatasetHparams, TrainingHparams
+from foundations.hparams import DatasetHparams, ModelHparams, TrainingHparams
 from spawning.run import SpawningRunner
 from spawning.desc import SpawningDesc
 
@@ -16,13 +16,21 @@ def main(parent_seed, children_seeds, spawn_step_index):
         weight_decay=0
     )
 
-    pretrain_dataset_hparams = DatasetHparams(random_labels_fraction=1.0)
+    pretrain_dataset_hparams = DatasetHparams(
+        random_labels_fraction=1.0,
+        do_not_augment=True
+    )
+
+    model_hparams = ModelHparams(
+        model_name='cifar_resnet_20_32'
+    )
 
     spawning_desc = SpawningDesc(
         training_hparams=training_hparams,
         dataset_hparams=dataset_hparams,
         pretrain_dataset_hparams=pretrain_dataset_hparams,
-        pretrain_training_hparams=pretrain_training_hparams
+        pretrain_training_hparams=pretrain_training_hparams,
+        model_hparams=model_hparams
     )
     
     spawning_runner = SpawningRunner(
