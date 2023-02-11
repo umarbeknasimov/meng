@@ -17,5 +17,6 @@ def get_lr_scheduler(args: TrainingHparams, iterations_per_epoch: int, optimizer
         return None
     lr_milestones = [Step.from_str(x, iterations_per_epoch).iteration for x in args.milestone_steps.split(',')]
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                            milestones=lr_milestones)
+                                                            milestones=lr_milestones,
+                                                            gamma=args.gamma)
     return lr_scheduler

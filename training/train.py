@@ -45,7 +45,7 @@ def train(
     if start_step > end_step:
         return
     for ep in range(start_step.ep, end_step.ep + 1):
-        train_loader.shuffle(None if data_order_seed is None else (data_order_seed + ep))
+        # train_loader.shuffle(None if data_order_seed is None else (data_order_seed + ep))
         for it, (input, target) in enumerate(train_loader):
 
             # advance dataloader until start epoch and iteration

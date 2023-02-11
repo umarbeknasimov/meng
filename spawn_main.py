@@ -13,7 +13,8 @@ def main(parent_seed, children_seeds, spawn_step_index):
         training_steps='1000ep',
         momentum=0,
         milestone_steps=None,
-        weight_decay=0
+        weight_decay=0,
+        lr=0.01
     )
 
     pretrain_dataset_hparams = DatasetHparams(random_labels_fraction=1.0)
