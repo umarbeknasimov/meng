@@ -42,7 +42,9 @@ class Model(nn.Module):
         super(Model, self).__init__()
         outputs = outputs or 10
 
-        plan = [(16, 3), (32, 3), (64, 3)]
+        # plan = [(16, 3), (32, 3), (64, 3)] resnet20
+
+        plan = [(16, 8), (32, 8), (64, 8)] #resnet50
 
         # Initial convolution.
         current_filters = plan[0][0]
