@@ -22,7 +22,7 @@ def main(parent_seed, children_seeds, spawn_step_index):
     )
 
     model_hparams = ModelHparams(
-        model_name='cifar_resnet_20_32'
+        model_name='cifar_resnet_20'
     )
 
     spawning_desc = SpawningDesc(
