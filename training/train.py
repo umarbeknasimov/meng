@@ -79,6 +79,7 @@ def standard_train(
   training_hparams: TrainingHparams,
   pretrained_output_location: str = None,
   pretrained_step: Step = None,
+  pretrain_load_only_model_weights: bool = False,
   start_step: Step = None,
   verbose: bool = True,
   evaluate_every_epoch: bool = True
@@ -94,4 +95,4 @@ def standard_train(
     callbacks = standard_callbacks(
         training_hparams, train_loader, test_loader, start_step=start_step,
         verbose=verbose, evaluate_every_epoch=evaluate_every_epoch)
-    train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, start_step=start_step)
+    train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, pretrain_load_only_model_weights, start_step=start_step)

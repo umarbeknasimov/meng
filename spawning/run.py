@@ -30,10 +30,12 @@ class SpawningRunner(Runner):
         model = registry.get(self.desc.model_hparams).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
             pretrain_output_location = self.desc.run_path('pretrain')
+            # load model weights from pretrained model
             train.standard_train(
                 model, location, self.desc.dataset_hparams, 
                 self.desc.training_hparams, pretrain_output_location, 
-                self.desc.pretrain_end_step)
+                self.desc.pretrain_end_step,
+                pretrain_load_only_model_weights=True)
         else:
             train.standard_train(
                 model, location, self.desc.dataset_hparams, 
