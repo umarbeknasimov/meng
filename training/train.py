@@ -7,10 +7,9 @@ from foundations.step import Step
 from datasets.base import DataLoader
 from datasets import registry
 from training.callbacks import standard_callbacks
-from training.checkpointing import restore_checkpoint
+from training.checkpointing import load_pretrained, restore_checkpoint
 from training.metric_logger import MetricLogger
 from training import optimizers
-from training.pretrain import load_pretrained
 
 def train( 
     model: nn.Module,
@@ -20,6 +19,7 @@ def train(
     callbacks,
     pretrained_output_location: str = None,
     pretrained_step: Step = None,
+    pretrain_load_only_model_weights = False,
     start_step: Step = None, 
     end_step: Step = None):
 
@@ -28,7 +28,8 @@ def train(
     criterion = nn.CrossEntropyLoss()
     optimizer = optimizers.get_optimizer(model, training_hparams)
     scheduler = optimizers.get_lr_scheduler(training_hparams, train_loader.iterations_per_epoch, optimizer)
-    if pretrained_output_location and pretrained_step: load_pretrained(pretrained_output_location, pretrained_step, model, optimizer, scheduler)
+    if pretrained_output_location and pretrained_step: 
+        load_pretrained(pretrained_output_location, pretrained_step, model, optimizer, scheduler, pretrain_load_only_model_weights)
     
     cp_step, cp_logger = restore_checkpoint(output_location, model, optimizer, scheduler, train_loader.iterations_per_epoch)
     start_step = cp_step or start_step or Step.zero(train_loader.iterations_per_epoch)

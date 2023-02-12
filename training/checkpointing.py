@@ -1,5 +1,6 @@
 from foundations import paths
 from foundations.step import Step
+from models.registry import get_model_state_dict, get_optim_state_dict
 from training.metric_logger import MetricLogger
 from environment import environment
 
@@ -28,3 +29,16 @@ def restore_checkpoint(output_location, model, optimizer, scheduler, iterations_
     logger = MetricLogger.create_from_str(checkpoint['logger'])
     print(f'using check at step {step.ep_it_str}')
     return step, logger
+
+def load_pretrained(pretrained_output_location, pretrained_step, model, optimizer, scheduler, load_only_model_weights = False):
+    model_state_dict = get_model_state_dict(pretrained_output_location, pretrained_step)
+    model.load_state_dict(model_state_dict)
+
+    if not load_only_model_weights:
+        optim_state_dict = get_optim_state_dict(pretrained_output_location, pretrained_step)
+        optimizer.load_state_dict(optim_state_dict['optimizer'])
+        if scheduler is not None and optim_state_dict['scheduler'] is not None:
+            scheduler.load_state_dict(optim_state_dict['scheduler'])
+    
+
+

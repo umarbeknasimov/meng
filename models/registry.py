@@ -20,3 +20,7 @@ def get_optim_state_dict(output_location, step):
 
 def get(model_hparams: ModelHparams):
     return Model.get_model_from_name(model_hparams.model_name)
+
+def load_pretrained_model(pretrained_output_location, pretrained_step, model):
+    model_state_dict = get_model_state_dict(pretrained_output_location, pretrained_step)
+    model.load_state_dict(model_state_dict)
