@@ -72,7 +72,7 @@ class SpawningRunner(Runner):
         for child_step in self.desc.children_saved_steps:
             if registry.model_exists(output_location, child_step):
                 continue
-            standard_average(self.desc.dataset_hparams, output_location, spawn_step_location, seeds, child_step)
+            standard_average(self.desc.dataset_hparams, self.desc.model_hparams, output_location, spawn_step_location, seeds, child_step)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
