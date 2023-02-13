@@ -31,9 +31,8 @@ def flatten_model_params(model):
     return vec
 
 def get_state_dict_wo_batch_stats(reference_model, state_dict):
-    model = Model()
     new_state_dict = {}
-    for name, param in model.state_dict().items():
+    for name, param in reference_model.state_dict().items():
         if 'num_batches_tracked' in name or 'mean' in name or 'var' in name:
             new_state_dict[name] = param
         else:
