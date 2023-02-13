@@ -7,7 +7,7 @@ from models.cifar_resnet import Model
 from spawning.average import standard_average
 from spawning.desc import SpawningDesc
 from training import train
-from models import registry
+import models.registry
 
 @dataclass
 class SpawningRunner(Runner):
@@ -22,12 +22,12 @@ class SpawningRunner(Runner):
         location = self._train_location()
         environment.exists_or_makedirs(location)
         
-        if registry.state_dicts_exist(location, self.desc.train_end_step): 
+        if models.registry.state_dicts_exist(location, self.desc.train_end_step): 
             print('train model already exists')
             return
 
         print('not all spawn steps saved so running train on parent')
-        model = registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
             pretrain_output_location = self.desc.run_path('pretrain')
             # load model weights from pretrained model
@@ -43,12 +43,12 @@ class SpawningRunner(Runner):
     
     def _pretrain(self):
         output_location = self._pretrain_location()
-        if registry.state_dicts_exist(output_location, self.desc.pretrain_end_step): 
+        if models.registry.state_dicts_exist(output_location, self.desc.pretrain_end_step): 
             print('pretrain model already exists')
             return
         print('pretrain model doesn\'t exist so running pretrain')
     
-        model = registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams).to(environment.device())
         train.standard_train(model, output_location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams)
     
     def _spawn_and_train(self, spawn_step, data_order_seed):
@@ -56,11 +56,11 @@ class SpawningRunner(Runner):
             self.desc.training_hparams, {'data_order_seed': data_order_seed})
         output_location = self._spawn_step_child_location(spawn_step, data_order_seed)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
-        if registry.state_dicts_exist(output_location, self.desc.train_end_step):
+        if models.registry.state_dicts_exist(output_location, self.desc.train_end_step):
             print(f'child already exists')
             return
         print(f'child doesn\'t exist so running train')
-        model = registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams).to(environment.device())
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.desc.run_path('parent'), spawn_step)
     
     def _average(self, spawn_step, seeds):
@@ -70,7 +70,7 @@ class SpawningRunner(Runner):
         spawn_step_location = self._spawn_step_location(spawn_step)
 
         for child_step in self.desc.children_saved_steps:
-            if registry.model_exists(output_location, child_step):
+            if models.registry.model_exists(output_location, child_step):
                 continue
             standard_average(self.desc.dataset_hparams, self.desc.model_hparams, output_location, spawn_step_location, seeds, child_step)
                 

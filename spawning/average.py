@@ -1,11 +1,11 @@
 from datasets.base import DataLoader
-from datasets import registry
+import datasets.registry
 from environment import environment
 from foundations import paths
 from foundations.hparams import DatasetHparams, ModelHparams
 from foundations.step import Step
 from foundations.callbacks import create_eval_callback, save_logger, save_model
-from models import registry
+import models.registry
 from training.metric_logger import MetricLogger
 from utils import state_dict, interpolate
 from models.registry import get_model_state_dict
@@ -31,7 +31,7 @@ def average(
             get_model_state_dict(
                 paths.seed(models_location, data_order_seed), 
                 step))
-        model = registry.get(model_hparams).to(environment.device())
+        model = models.registry.get(model_hparams).to(environment.device())
         averaged_weights = interpolate.average_state_dicts(weights)
         averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(averaged_weights)
         model.load_state_dict(averaged_weights_wo_batch_stats)
@@ -52,8 +52,8 @@ def standard_average(
     seeds: list,
     step: Step
 ):
-    train_loader = registry.get(dataset_hparams)
-    test_loader = registry.get(dataset_hparams, False)
+    train_loader = datasets.registry.get(dataset_hparams)
+    test_loader = datasets.registry.get(dataset_hparams, False)
     test_eval_callback = create_eval_callback('test', test_loader)
     train_eval_callback = create_eval_callback('train', train_loader)
     callbacks = [test_eval_callback, train_eval_callback, save_logger, save_model]
