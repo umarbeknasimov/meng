@@ -30,7 +30,7 @@ def flatten_model_params(model):
             vec = torch.cat((vec, p.view(-1)))
     return vec
 
-def get_state_dict_wo_batch_stats(state_dict):
+def get_state_dict_wo_batch_stats(reference_model, state_dict):
     model = Model()
     new_state_dict = {}
     for name, param in model.state_dict().items():
