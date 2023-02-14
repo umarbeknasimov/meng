@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from foundations import hparams
+from training.desc import TrainingDesc
 
 def init_fn(w):
   if isinstance(w, torch.nn.Linear) or isinstance(w, torch.nn.Conv2d):
@@ -109,3 +111,25 @@ class Model(nn.Module):
         plan = [(W, D), (2*W, D), (4*W, D)]
 
         return Model(plan, outputs)
+    
+    @staticmethod
+    def default_hparams():
+        model_hparams = hparams.ModelHparams(
+            model_name='cifar_resnet_20'
+        )
+
+        dataset_hparams = hparams.DatasetHparams(
+            batch_size=128
+        )
+
+        training_hparams = hparams.TrainingHparams(
+            momentum=0.9,
+            milestone_steps='80ep,120ep',
+            lr=0.1,
+            gamma=0.1,
+            weight_decay=1e-4,
+            training_steps='160ep'
+        )
+
+        return TrainingDesc(model_hparams, dataset_hparams, training_hparams)
+

@@ -28,7 +28,6 @@ class Desc(abc.ABC):
         fields_dict = {f.name: getattr(self, f.name) for f in fields(self)}
         hparams_strs = []
         for k in sorted(fields_dict):
-            hparams_strs.append(k)
             if isinstance(fields_dict[k], Hparams):
                 hparams_strs.append(fields_dict[k].display)
             elif isinstance(fields_dict[k], Desc):

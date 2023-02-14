@@ -1,12 +1,15 @@
+import argparse
 import os
 
 from dataclasses import dataclass
 from foundations import desc
+from foundations import hparams
 from foundations.hparams import ModelHparams, TrainingHparams, DatasetHparams
 from foundations.step import Step
 import datasets.registry
-from foundations import desc, paths
+from foundations import desc
 from environment import environment
+from training.desc import TrainingDesc
 
 @dataclass
 class SpawningDesc(desc.Desc):
@@ -15,14 +18,41 @@ class SpawningDesc(desc.Desc):
     model_hparams: ModelHparams
     pretrain_training_hparams: TrainingHparams = None
     pretrain_dataset_hparams: DatasetHparams = None
-    
 
     @staticmethod
     def name_prefix(): return 'spawn'
 
-    def run_path(self, part='main'):
+    @staticmethod
+    def _add_pretrain_argument(parser):
+        parser.add_argument('--pretrain', action='store_true')
+
+    @staticmethod
+    def add_args(parser: argparse.ArgumentParser, defaults: TrainingDesc = None) -> None:
+        hparams.DatasetHparams.add_args(parser, defaults=defaults.dataset_hparams if defaults else None)
+        hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None)
+        hparams.ModelHparams.add_args(parser, defaults=defaults.model_hparams if defaults else None)
+
+        SpawningDesc._add_pretrain_argument(parser)
+        hparams.DatasetHparams.add_args(parser, defaults=defaults.dataset_hparams if defaults else None, prefix='pretrain')
+        hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None, prefix='pretrain')
+    
+    @staticmethod
+    def create_from_args(args: argparse.Namespace) -> 'SpawningDesc':
+        dataset_hparams = hparams.DatasetHparams.create_from_args(args)
+        training_hparams = hparams.TrainingHparams.create_from_args(args)
+        model_hparams = hparams.ModelHparams.create_from_args(args)
+        desc = SpawningDesc(training_hparams, dataset_hparams, model_hparams)
+        if args.pretrain:
+            desc.pretrain_dataset_hparams = hparams.DatasetHparams.create_from_args(args, prefix='pretrain')
+            desc.pretrain_dataset_hparams._name = 'Pretraining ' + desc.pretrain_dataset_hparams._name
+            desc.pretrain_training_hparams = hparams.TrainingHparams.create_from_args(args, prefix='pretrain')
+            desc.pretrain_training_hparams._name = 'Pretraining ' + desc.pretrain_training_hparams._name
+        return desc
+
+    def run_path(self, part='main', experiment='main'):
         path = os.path.join(
             environment.get_user_dir(), 
+            experiment,
             self.hashname,
             part)
         environment.exists_or_makedirs(path)

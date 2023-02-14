@@ -10,11 +10,11 @@ class Runner:
         """a description of this runner"""
         pass
 
-    # @staticmethod
-    # @abc.abstractmethod
-    # def add_args(parser: argparse.ArgumentParser) -> None:
-    #     """add command line flags for this runner"""
-    #     pass
+    @staticmethod
+    @abc.abstractmethod
+    def add_args(parser: argparse.ArgumentParser) -> None:
+        """add command line flags for this runner"""
+        pass
 
     @staticmethod
     @abc.abstractmethod

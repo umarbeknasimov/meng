@@ -1,4 +1,6 @@
+import argparse
 from dataclasses import dataclass
+from cli import shared_args
 from environment import environment
 from foundations.runner import Runner
 from foundations.hparams import TrainingHparams
@@ -13,10 +15,28 @@ import models.registry
 class SpawningRunner(Runner):
     desc: SpawningDesc
     children_data_order_seeds: str
+    experiment: str = 'main'
 
     @staticmethod
     def description():
         return 'spawn and train children from trained model'
+    
+    @staticmethod
+    def add_args(parser: argparse.ArgumentParser) -> None:
+        shared_args.JobArgs.add_args(parser)
+        SpawningRunner._add_children_data_order_seeds_argument(parser)
+        SpawningDesc.add_args(parser, shared_args.maybe_get_default_hparams())
+    
+    @staticmethod
+    def _add_children_data_order_seeds_argument(parser: argparse.ArgumentParser):
+        parser.add_argument('--children_data_order_seeds', type=int, nargs='+', required=True)
+    
+    @staticmethod
+    def create_from_args(args: argparse.Namespace) -> 'SpawningRunner':
+        return SpawningRunner(
+            SpawningDesc.create_from_args(args), 
+            children_data_order_seeds=args.children_data_order_seeds, 
+            experiment=args.experiment)
     
     def _train(self):
         location = self._train_location()
@@ -29,7 +49,7 @@ class SpawningRunner(Runner):
         print('not all spawn steps saved so running train on parent')
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
-            pretrain_output_location = self.desc.run_path('pretrain')
+            pretrain_output_location = self._pretrain_location()
             # load model weights from pretrained model
             train.standard_train(
                 model, location, self.desc.dataset_hparams, 
@@ -77,13 +97,12 @@ class SpawningRunner(Runner):
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
 
-        self.desc.save_hparam(self.desc.run_path())
+        self.desc.save_hparam(self.desc.run_path(part='main', experiment=self.experiment))
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams: self._pretrain()
         
         self._train()
-        seeds = [int(seed) for seed in self.children_data_order_seeds.split(',')]
 
-        print(f'spawning children with seeds {seeds}')
+        print(f'spawning children with seeds {self.children_data_order_seeds}')
         indices = []
         # for running parallel slurm job tasks
         if spawn_step_index:
@@ -94,19 +113,19 @@ class SpawningRunner(Runner):
             indices = [0, len(self.desc.spawn_steps)]
         for spawn_step_i in indices:
             spawn_step = self.desc.spawn_steps[spawn_step_i]
-            for data_order_seed in seeds:
+            for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
-            if len(seeds) > 1:
-                self._average(spawn_step, seeds)
+            if len(self.children_data_order_seeds) > 1:
+                self._average(spawn_step, self.children_data_order_seeds)
 
     def _train_location(self):
-        return self.desc.run_path('parent')
+        return self.desc.run_path(part='parent', experiment=self.experiment)
     
     def _pretrain_location(self):
-        return self.desc.run_path('pretrain')
+        return self.desc.run_path(part='pretrain', experiment=self.experiment)
     
     def _spawn_step_location(self, spawn_step):
-        return paths.spawn_step(self.desc.run_path('children'), spawn_step)
+        return paths.spawn_step(self.desc.run_path(part='children', experiment=self.experiment), spawn_step)
     
     def _spawn_step_average_location(self, spawn_step, seeds):
         return paths.average(self._spawn_step_location(spawn_step), seeds)

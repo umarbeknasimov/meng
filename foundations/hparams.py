@@ -1,30 +1,39 @@
 
 import abc
 import argparse
-from dataclasses import dataclass, fields, asdict
+from dataclasses import MISSING, dataclass, fields, asdict
 import copy
 
 @dataclass
 class Hparams(abc.ABC):
   """ collection of hyperparameters"""
   @classmethod
-  def add_args(cls, parser, defaults: 'Hparams' = None, 
-    name: str = None, description: str = None, create_group: bool = False):
+  def add_args(cls, parser, defaults: 'Hparams' = None, prefix: str = None):
     if defaults and not isinstance(defaults, cls):
       raise ValueError(f'defaults must also be type {cls}')
     
     for field in fields(cls):
       if field.name.startswith('_'): continue
       if defaults: default = copy.deepcopy(getattr(defaults, field.name, None))
-      arg_name = f'--{field.name}'
-      parser.add_argument(arg_name, type=field.type, default=default)
+      elif field.default != MISSING: default = copy.deepcopy(field.default)
+      else: default = None
+      arg_name = f'--{field.name}' if prefix is None else f'--{prefix}_{field.name}'
+      if field.type == bool:
+        if (default and getattr(defaults, field.name) is not False or field.default is not False):
+          raise ValueError(f'bool hyperparams must default to false: {field.name}')
+        parser.add_argument(arg_name, action='store_true') 
+      elif field.type in [str, float, int]:
+        required = field.default is MISSING and default is None
+        parser.add_argument(arg_name, type=field.type, default=default, required=required)
+      # parser.add_argument(arg_name, type=field.type, default=default)
   
   @classmethod
   def create_from_args(cls, args: argparse.Namespace, prefix: str = None) -> 'Hparams':
     d = {}
+    print('args ', args)
     for field in fields(cls):
-      arg_name = field.name
-      if arg_name.startswith('_'): continue
+      if field.name.startswith('_'): continue
+      arg_name = f'{field.name}' if prefix is None else f'{prefix}_{field.name}'
       if not hasattr(args, arg_name): raise ValueError(f'Missing argument: {arg_name}')
       d[field.name] = getattr(args, arg_name)
     return cls(**d)
