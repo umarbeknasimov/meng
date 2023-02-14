@@ -2,6 +2,7 @@ import argparse
 import os
 
 from dataclasses import dataclass
+from cli.arg_utils import maybe_get_arg
 from foundations import desc
 from foundations import hparams
 from foundations.hparams import ModelHparams, TrainingHparams, DatasetHparams
@@ -32,9 +33,11 @@ class SpawningDesc(desc.Desc):
         hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None)
         hparams.ModelHparams.add_args(parser, defaults=defaults.model_hparams if defaults else None)
 
+        pretrain = maybe_get_arg('pretrain', boolean_arg=True)
         SpawningDesc._add_pretrain_argument(parser)
-        hparams.DatasetHparams.add_args(parser, defaults=defaults.dataset_hparams if defaults else None, prefix='pretrain')
-        hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None, prefix='pretrain')
+        if pretrain:
+            hparams.DatasetHparams.add_args(parser, defaults=defaults.dataset_hparams if defaults else None, prefix='pretrain')
+            hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None, prefix='pretrain')
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'SpawningDesc':
