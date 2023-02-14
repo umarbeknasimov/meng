@@ -100,7 +100,7 @@ class SpawningRunner(Runner):
         self.desc.save_hparam(self.desc.run_path(part='main', experiment=self.experiment))
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams: self._pretrain()
         
-        # self._train()
+        self._train()
 
         print(f'spawning children with seeds {self.children_data_order_seeds}')
         indices = []
@@ -113,8 +113,8 @@ class SpawningRunner(Runner):
             indices = [0, len(self.desc.spawn_steps)]
         for spawn_step_i in indices:
             spawn_step = self.desc.spawn_steps[spawn_step_i]
-            # for data_order_seed in self.children_data_order_seeds:
-            #     self._spawn_and_train(spawn_step, data_order_seed)
+            for data_order_seed in self.children_data_order_seeds:
+                self._spawn_and_train(spawn_step, data_order_seed)
             if len(self.children_data_order_seeds) > 1:
                 self._average(spawn_step, self.children_data_order_seeds)
 
