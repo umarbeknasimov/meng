@@ -2,6 +2,7 @@ import argparse
 from dataclasses import dataclass
 from cli import shared_args
 from environment import environment
+from foundations.callbacks import is_logger_info_saved
 from foundations.runner import Runner
 from foundations.hparams import TrainingHparams
 from foundations import paths
@@ -14,7 +15,7 @@ import models.registry
 @dataclass
 class SpawningRunner(Runner):
     desc: SpawningDesc
-    children_data_order_seeds: str
+    children_data_order_seeds: list[int]
     experiment: str = 'main'
 
     @staticmethod
@@ -90,8 +91,11 @@ class SpawningRunner(Runner):
         spawn_step_location = self._spawn_step_location(spawn_step)
 
         for child_step in self.desc.children_saved_steps:
-            if models.registry.model_exists(output_location, child_step):
+            print(f'child step {child_step.ep_it_str}')
+            if models.registry.model_exists(output_location, child_step) and is_logger_info_saved(output_location, child_step):
+                print('not running average')
                 continue
+            print('running average')
             standard_average(self.desc.dataset_hparams, self.desc.model_hparams, output_location, spawn_step_location, seeds, child_step)
                 
     def run(self, spawn_step_index: int = None):
