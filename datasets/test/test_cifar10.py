@@ -25,7 +25,6 @@ class TestDataset(test_case.TestCase):
         labels_before = self.test_set._labels.tolist()
         self.test_set.randomize_labels(0, 0.5)
         examples_match = np.sum(np.equal(labels_before, self.test_set._labels).astype(int))
-        print(examples_match)
         self.assertEqual(examples_match, 5503)
     
     def test_randomize_labels_none(self):

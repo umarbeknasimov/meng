@@ -10,9 +10,6 @@ def get_user_dir():
 def device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def open(file, mode='r'):
-    return open(file, mode)
-
 def exists(file):
     return os.path.exists(file)
 
