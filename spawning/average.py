@@ -31,19 +31,19 @@ def average(
             get_model_state_dict(
                 paths.seed(models_location, data_order_seed),
                 step))
-        model = models.registry.get(model_hparams).to(environment.device())
-        averaged_weights = interpolate.average_state_dicts(weights)
-        averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
-            model, averaged_weights)
-        model.load_state_dict(averaged_weights_wo_batch_stats)
-        interpolate.forward_pass(model, train_loader)
-        for callback in callbacks: callback(
-            output_location,
-            step,
-            model,
-            None,
-            None,
-            logger)
+    model = models.registry.get(model_hparams).to(environment.device())
+    averaged_weights = interpolate.average_state_dicts(weights)
+    averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
+        model, averaged_weights)
+    model.load_state_dict(averaged_weights_wo_batch_stats)
+    interpolate.forward_pass(model, train_loader)
+    for callback in callbacks: callback(
+        output_location,
+        step,
+        model,
+        None,
+        None,
+        logger)
 
 def standard_average(
     dataset_hparams: DatasetHparams,
