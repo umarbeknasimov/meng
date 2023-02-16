@@ -115,7 +115,7 @@ class SpawningRunner(Runner):
         else:
             print(f'running for all spawn steps')
             indices = [0, len(self.desc.spawn_steps)]
-        for spawn_step_i in indices:
+        for spawn_step_i in range(*indices):
             spawn_step = self.desc.spawn_steps[spawn_step_i]
             for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
