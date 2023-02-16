@@ -8,15 +8,15 @@ from environment import environment
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        testing_path = os.path.join(environment.get_user_dir(), 'TESTING')
-        if environment.exists(testing_path):
-            shutil.rmtree(testing_path)
-        environment.makedirs(testing_path)
-        self.testing_path = testing_path
+        root = os.path.join(environment.get_user_dir(), 'TESTING')
+        if environment.exists(root):
+            shutil.rmtree(root)
+        environment.makedirs(root)
+        self.root = root
 
     def tearDown(self):
-        if environment.exists(self.testing_path):
-            shutil.rmtree(self.testing_path)
+        if environment.exists(self.root):
+            shutil.rmtree(self.root)
     
     @staticmethod
     def get_state(model):
