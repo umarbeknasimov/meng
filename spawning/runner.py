@@ -15,7 +15,7 @@ import models.registry
 @dataclass
 class SpawningRunner(Runner):
     desc: SpawningDesc
-    children_data_order_seeds: list[int]
+    children_data_order_seeds: list
     experiment: str = 'main'
 
     @staticmethod

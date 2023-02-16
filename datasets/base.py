@@ -51,7 +51,7 @@ class Dataset(abc.ABC, torch.utils.data.Dataset):
     def randomize_labels(self, seed: int, fraction: float) -> None:
         """randomize labels of specified fraction of the dataset"""
 
-        num_to_randomize = np.ceil(self.num_train_examples() * fraction).astype(int)
+        num_to_randomize = np.ceil(len(self._labels) * fraction).astype(int)
         randomized_labels = np.random.RandomState(seed=seed).randint(self.num_classes(), size=num_to_randomize)
         examples_to_randomize = np.random.RandomState(seed=seed+1).permutation(np.arange(len(self._labels)))[:num_to_randomize]
         self._labels[examples_to_randomize] = randomized_labels
@@ -60,9 +60,9 @@ class Dataset(abc.ABC, torch.utils.data.Dataset):
         if self._subsampled:
             raise ValueError('cannot subsample more than once')
         
-        num_to_subsample = np.ceil(self.num_train_examples() * fraction).astype(int)
+        num_to_subsample = np.ceil(len(self._labels) * fraction).astype(int)
         examples_in_subsample = np.random.RandomState(seed=seed).randint(self.num_classes(), size=num_to_subsample)
-        self._examples, self_labels = self._examples[examples_in_subsample], self_labels[examples_in_subsample]
+        self._examples, self._labels = self._examples[examples_in_subsample], self._labels[examples_in_subsample]
 
     def __len__(self):
         return self._labels.size

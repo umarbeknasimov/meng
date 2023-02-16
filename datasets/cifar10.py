@@ -1,8 +1,23 @@
+import os
+import sys
 import torchvision
 import numpy as np
 from PIL import Image
 
 from datasets import base
+from environment import environment
+
+class CIFAR10(torchvision.datasets.CIFAR10):
+    """A subclass to suppress an annoying print statement in the torchvision CIFAR-10 library.
+    Not strictly necessary - you can just use `torchvision.datasets.CIFAR10 if the print
+    message doesn't bother you.
+    """
+
+    def download(self):
+        with environment.open(os.devnull, 'w') as fp:
+            sys.stdout = fp
+            super(CIFAR10, self).download()
+            sys.stdout = sys.__stdout__
 
 class Dataset(base.ImageDataset):
     @staticmethod
@@ -17,12 +32,12 @@ class Dataset(base.ImageDataset):
     @staticmethod
     def get_train_set(use_augmentation: bool = True):
         augment = [torchvision.transforms.RandomHorizontalFlip(), torchvision.transforms.RandomCrop(32, 4)]
-        train_set = torchvision.datasets.CIFAR10(train=True, root='./data', download=True)
+        train_set = CIFAR10(train=True, root='./data', download=True)
         return Dataset(train_set.data, np.array(train_set.targets), augment if use_augmentation else [])
 
     @staticmethod
     def get_test_set():
-        train_set = torchvision.datasets.CIFAR10(train=False, root='./data', download=True)
+        train_set = CIFAR10(train=False, root='./data', download=True)
         return Dataset(train_set.data, np.array(train_set.targets))
 
     def __init__(self, examples, labels, image_transforms=None):
