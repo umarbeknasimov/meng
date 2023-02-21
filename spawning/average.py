@@ -57,7 +57,7 @@ def standard_average(
     test_loader = datasets.registry.get(dataset_hparams, False)
     test_eval_callback = create_eval_callback('test', test_loader)
     train_eval_callback = create_eval_callback('train', train_loader)
-    callbacks = [test_eval_callback, train_eval_callback, save_logger, save_model]
+    callbacks = [save_model, test_eval_callback, train_eval_callback, save_logger]
 
     return average(model_hparams, output_location, models_location, callbacks, train_loader, seeds, step)
 

@@ -65,20 +65,20 @@ def standard_callbacks(
     result = [
         run_at_step(start, save_state_dicts),
         run_at_step(end, save_state_dicts),
-        run_at_step(end, save_logger),
-        run_every_epoch(save_logger),
+        run_at_log_base_2_steps(save_state_dicts),
+        run_every_epoch(checkpointing.save_checkpoint_callback)
     ]
 
-    if evaluate_every_epoch: result = [run_every_epoch(test_eval_callback)] + result
+    if evaluate_every_epoch: result = result + [run_every_epoch(test_eval_callback)]
     if eval_on_train:
-        if evaluate_every_epoch: result = [run_every_epoch(train_eval_callback)] + result
+        if evaluate_every_epoch: result = result + [run_every_epoch(train_eval_callback)]
     
-    result = [
-        run_at_log_base_2_steps(save_state_dicts), 
+    result = result + [
         run_at_log_base_2_steps(train_eval_callback),
         run_at_log_base_2_steps(test_eval_callback),
         run_at_log_base_2_steps(save_logger),
-        run_every_epoch(checkpointing.save_checkpoint_callback)] + result
+        run_every_epoch(save_logger),
+        run_at_step(end, save_logger)]
     
     return result
 

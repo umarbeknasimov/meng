@@ -132,4 +132,8 @@ class Model(nn.Module):
         )
 
         return TrainingDesc(model_hparams, dataset_hparams, training_hparams)
+    
+    @property
+    def loss_criterion(self):
+        return nn.CrossEntropyLoss()
 

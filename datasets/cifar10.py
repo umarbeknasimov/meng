@@ -14,10 +14,11 @@ class CIFAR10(torchvision.datasets.CIFAR10):
     """
 
     def download(self):
+        original_stdout = sys.stdout
         with open(os.devnull, mode='w') as fp:
             sys.stdout = fp
             super(CIFAR10, self).download()
-            sys.stdout = sys.__stdout__
+            sys.stdout = original_stdout
 
 class Dataset(base.ImageDataset):
     @staticmethod

@@ -43,7 +43,7 @@ def train(
         data_order_seed_generator.manual_seed(data_order_seed)
         data_order_seed = torch.randint(int(1e8), (1,), generator=data_order_seed_generator).item()
 
-    if start_step > end_step:
+    if start_step >= end_step:
         return
     for ep in range(start_step.ep, end_step.ep + 1):
         train_loader.shuffle(None if data_order_seed is None else (data_order_seed + ep))

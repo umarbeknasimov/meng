@@ -64,6 +64,7 @@ class SpawningRunner(Runner):
     
     def _pretrain(self):
         output_location = self._pretrain_location()
+        environment.exists_or_makedirs(output_location)
         if models.registry.state_dicts_exist(output_location, self.desc.pretrain_end_step): 
             print('pretrain model already exists')
             return
@@ -76,6 +77,7 @@ class SpawningRunner(Runner):
         training_hparams = TrainingHparams.create_from_instance_and_dict(
             self.desc.training_hparams, {'data_order_seed': data_order_seed})
         output_location = self._spawn_step_child_location(spawn_step, data_order_seed)
+        environment.exists_or_makedirs(output_location)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
         if models.registry.state_dicts_exist(output_location, self.desc.train_end_step):
             print(f'child already exists')
@@ -88,7 +90,9 @@ class SpawningRunner(Runner):
         print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
 
         output_location = self._spawn_step_average_location(spawn_step, seeds)
+        environment.exists_or_makedirs(output_location)
         spawn_step_location = self._spawn_step_location(spawn_step)
+        environment.exists_or_makedirs(spawn_step_location)
 
         for child_step in self.desc.children_saved_steps:
             print(f'child step {child_step.ep_it_str}')
@@ -101,7 +105,9 @@ class SpawningRunner(Runner):
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
 
-        self.desc.save_hparam(self.desc.run_path(part='main', experiment=self.experiment))
+        main_path = self.desc.run_path(part='main', experiment=self.experiment)
+        environment.exists_or_makedirs(main_path)
+        self.desc.save_hparam(main_path)
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams: self._pretrain()
         
         self._train()

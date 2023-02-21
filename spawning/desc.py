@@ -58,7 +58,6 @@ class SpawningDesc(desc.Desc):
             experiment,
             self.hashname,
             part)
-        environment.exists_or_makedirs(path)
         return path
     
     def str_to_step(self, s: str, pretrain: bool = False) -> Step:

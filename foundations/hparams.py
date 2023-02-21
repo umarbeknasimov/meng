@@ -25,7 +25,6 @@ class Hparams(abc.ABC):
       elif field.type in [str, float, int]:
         required = field.default is MISSING and default is None
         parser.add_argument(arg_name, type=field.type, default=default, required=required)
-      # parser.add_argument(arg_name, type=field.type, default=default)
   
   @classmethod
   def create_from_args(cls, args: argparse.Namespace, prefix: str = None) -> 'Hparams':
