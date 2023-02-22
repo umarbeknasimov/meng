@@ -6,7 +6,7 @@ from cli import shared_args
 from environment import environment
 from foundations.runner import Runner
 import models.registry
-from training.callbacks import run_every_epoch, save_state_dicts, standard_callbacks
+from training.callbacks import run_every_x_iters_for_first_y_epochs, save_state_dicts, standard_callbacks
 from training.train import train
 from training.desc import TrainingDesc
 
@@ -35,8 +35,7 @@ class TrainingRunner(Runner):
         train_loader = datasets.registry.get(self.training_desc.dataset_hparams)
         test_loader = datasets.registry.get(self.training_desc.dataset_hparams, False)
         callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
-        # if self.save_every_epoch:
-        #     callbacks.append(run_every_epoch(save_state_dicts))
+        callbacks = [run_every_x_iters_for_first_y_epochs(5, 10, save_state_dicts)] + callbacks
 
         model = models.registry.get(self.training_desc.model_hparams).to(environment.device())
 

@@ -15,6 +15,13 @@ def run_every_epoch(callback):
         callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 
+def run_every_x_iters_for_first_y_epochs(iters, epochs, callback):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+        if step.it % iters != 0 or step.ep > epochs:
+            return
+        callback(output_location, step, model, optimizer, scheduler, logger)
+    return modified_callback
+
 def run_every_step(callback):
     return callback
 
