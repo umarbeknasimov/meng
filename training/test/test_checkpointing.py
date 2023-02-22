@@ -10,7 +10,7 @@ from training.metric_logger import MetricLogger
 
 
 class TestCheckpointing(test_case.TestCase):
-    def test_create_restore_delete(self):
+    def test_create_restore(self):
         hp = models.registry.get_default_hparams('cifar_resnet_20')
         model = models.registry.get(hp.model_hparams)
         optimizer = optimizers.get_optimizer(model, hp.training_hparams)
@@ -52,5 +52,37 @@ class TestCheckpointing(test_case.TestCase):
         self.assertStateEqual(model.state_dict(), model2.state_dict())
         self.assertOptimizerEqual(optimizer, optimizer2)
         self.assertSchedulerEqual(scheduler, scheduler2)
+    
+    def test_create_restore_no_scheduler(self):
+        hp = models.registry.get_default_hparams('cifar_resnet_20')
+        model = models.registry.get(hp.model_hparams)
+        optimizer = optimizers.get_optimizer(model, hp.training_hparams)
+        dataloader = datasets.registry.get(hp.dataset_hparams)
+        step = Step.from_epoch(13, 27, 400)
+
+        examples, labels = next(iter(dataloader))
+        optimizer.zero_grad()
+        model.train()
+        model.loss_criterion(model(examples), labels).backward()
+        optimizer.step()
+
+        logger = MetricLogger()
+        logger.add('test_accuracy', Step.from_epoch(0, 0, 400), 0.1)
+
+        checkpointing.save_checkpoint_callback(self.root, step, model, optimizer, None, logger)
+        self.assertTrue(environment.exists(paths.checkpoint(self.root)))
+
+        # new model
+        model2 = models.registry.get(hp.model_hparams)
+        optimizer2 = optimizers.get_optimizer(model, hp.training_hparams)
+
+        step2, logger2 = checkpointing.restore_checkpoint(self.root, model2, optimizer2, None, 400)
+
+        self.assertTrue(environment.exists(paths.checkpoint(self.root)))
+        self.assertEqual(step, step2)
+        self.assertEqual(str(logger), str(logger2))
+
+        self.assertStateEqual(model.state_dict(), model2.state_dict())
+        self.assertOptimizerEqual(optimizer, optimizer2)
         
 test_case.main()

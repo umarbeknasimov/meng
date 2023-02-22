@@ -68,7 +68,7 @@ class TrainingHparams(Hparams):
   lr: float = 0.1
   gamma: float = 0.1
   momentum: float = 0.9
-  milestone_steps: str = '80ep,120ep'
+  milestone_steps: str = None
   weight_decay: float = 1e-4
   data_order_seed: int = None
 
