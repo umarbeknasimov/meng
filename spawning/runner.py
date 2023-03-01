@@ -6,7 +6,6 @@ from foundations.callbacks import is_logger_info_saved
 from foundations.runner import Runner
 from foundations.hparams import TrainingHparams
 from foundations import paths
-from models.cifar_resnet import Model
 from spawning.average import standard_average
 from spawning.desc import SpawningDesc
 from training import train
@@ -17,6 +16,7 @@ class SpawningRunner(Runner):
     desc: SpawningDesc
     children_data_order_seeds: list
     experiment: str = 'main'
+    save_dense: bool = False
 
     @staticmethod
     def description():
@@ -37,7 +37,8 @@ class SpawningRunner(Runner):
         return SpawningRunner(
             SpawningDesc.create_from_args(args), 
             children_data_order_seeds=args.children_data_order_seeds, 
-            experiment=args.experiment)
+            experiment=args.experiment,
+            save_dense=args.save_dense)
     
     def _train(self):
         location = self._train_location()
@@ -56,11 +57,13 @@ class SpawningRunner(Runner):
                 model, location, self.desc.dataset_hparams, 
                 self.desc.training_hparams, pretrain_output_location, 
                 self.desc.pretrain_end_step,
-                pretrain_load_only_model_weights=True)
+                pretrain_load_only_model_weights=True,
+                save_dense=self.save_dense)
         else:
             train.standard_train(
                 model, location, self.desc.dataset_hparams, 
-                self.desc.training_hparams)
+                self.desc.training_hparams,
+                save_dense=self.save_dense)
     
     def _pretrain(self):
         output_location = self._pretrain_location()
@@ -71,7 +74,7 @@ class SpawningRunner(Runner):
         print('pretrain model doesn\'t exist so running pretrain')
     
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
-        train.standard_train(model, output_location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams)
+        train.standard_train(model, output_location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams, save_dense=self.save_dense)
     
     def _spawn_and_train(self, spawn_step, data_order_seed):
         training_hparams = TrainingHparams.create_from_instance_and_dict(
@@ -84,7 +87,7 @@ class SpawningRunner(Runner):
             return
         print(f'child doesn\'t exist so running train')
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
-        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self._train_location(), spawn_step)
+        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self._train_location(), spawn_step, save_dense=self.save_dense)
     
     def _average(self, spawn_step, seeds):
         print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
@@ -94,7 +97,7 @@ class SpawningRunner(Runner):
         spawn_step_location = self._spawn_step_location(spawn_step)
         environment.exists_or_makedirs(spawn_step_location)
 
-        for child_step in self.desc.children_saved_steps:
+        for child_step in self.desc.children_saved_steps(self.save_dense):
             print(f'child step {child_step.ep_it_str}')
             if models.registry.model_exists(output_location, child_step) and is_logger_info_saved(output_location, child_step):
                 print('not running average')
@@ -120,9 +123,9 @@ class SpawningRunner(Runner):
             indices = [spawn_step_index, spawn_step_index + 1]
         else:
             print(f'running for all spawn steps')
-            indices = [0, len(self.desc.spawn_steps)]
+            indices = [0, len(self.desc.spawn_steps(self.save_dense))]
         for spawn_step_i in range(*indices):
-            spawn_step = self.desc.spawn_steps[spawn_step_i]
+            spawn_step = self.desc.spawn_steps(self.save_dense)[spawn_step_i]
             for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
             if len(self.children_data_order_seeds) > 1:

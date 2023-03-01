@@ -22,7 +22,7 @@ class TestRunner(test_case.TestCase):
         self.hparams.training_hparams.data_order_seed = 0
         self.train_loader = datasets.registry.get(self.hparams.dataset_hparams)
 
-        self.hparams.training_hparams.training_steps = '0ep2it'
+        self.hparams.training_hparams.training_steps = '0ep3it'
         self.hparams.training_hparams.milestone_steps = '0ep1it'
 
         self.model = models.registry.get(self.hparams.model_hparams)
@@ -46,7 +46,7 @@ class TestRunner(test_case.TestCase):
         self.assertFalse(environment.exists(runner._pretrain_location()))
         self.assertTrue(environment.exists(runner._train_location()))
 
-        parent_spawn_steps = desc.spawn_steps
+        parent_spawn_steps = desc.spawn_steps()
         for spawn_step in parent_spawn_steps:
             child_model_train_path = runner._spawn_step_child_location(spawn_step, children_seeds[0])
             parent_model_train_path = runner._train_location()
@@ -55,7 +55,7 @@ class TestRunner(test_case.TestCase):
             self.assertFalse(environment.exists(runner._spawn_step_average_location(spawn_step, children_seeds)))
             self.assertTrue(environment.exists(child_model_train_path))
             # child training
-            for child_step in desc.children_saved_steps:
+            for child_step in desc.children_saved_steps():
                 self.assertTrue(environment.exists(paths.model(runner._spawn_step_child_location(spawn_step, children_seeds[0]), child_step)))
             
             # check if state at parent spawn step is same as child step 0
@@ -89,18 +89,18 @@ class TestRunner(test_case.TestCase):
             model_hparams=self.hparams.model_hparams,
         )
         children_seeds = [1, 2, 3]
-        runner = SpawningRunner(desc=desc, children_data_order_seeds=children_seeds)
+        runner = SpawningRunner(desc=desc, children_data_order_seeds=children_seeds, save_dense=True)
         path = os.path.join(environment.get_user_dir(), 'main', desc.hashname)
         if environment.exists(path):
             print('removing path')
             shutil.rmtree(path)
 
         runner.run()
-        parent_spawn_steps = desc.spawn_steps
+        parent_spawn_steps = desc.spawn_steps(save_dense=True)
         for spawn_step in parent_spawn_steps:
             average_spawn_step_path = runner._spawn_step_average_location(spawn_step, children_seeds)
             self.assertTrue(environment.exists(average_spawn_step_path))
-            for child_step in desc.children_saved_steps:
+            for child_step in desc.children_saved_steps(save_dense=True):
                 self.assertTrue(environment.exists(paths.model(average_spawn_step_path, child_step)))
     
     def test_pretrain(self):
@@ -151,7 +151,7 @@ class TestRunner(test_case.TestCase):
         parent_model_train_path = runner._train_location()
         self.assertTrue(environment.exists(parent_model_train_path))
 
-        parent_spawn_steps = desc.spawn_steps
+        parent_spawn_steps = desc.spawn_steps()
         for spawn_step in parent_spawn_steps:
             self.assertTrue(environment.exists(paths.model(parent_model_train_path, spawn_step)))
             self.assertTrue(environment.exists(paths.optim(parent_model_train_path, spawn_step)))

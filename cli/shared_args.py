@@ -11,6 +11,7 @@ class JobArgs(Hparams):
     default_hparams: str = None
     quiet: bool = False
     experiment: str = 'main'
+    save_dense: bool = False
 
     _name: str = 'High-Level Arguments'
     _description: str = 'Arguments that determine how the job is run and where it is stored.'
@@ -19,6 +20,7 @@ class JobArgs(Hparams):
     _default_hparams: str = 'Populate all arguments with the default hyperparameters for this model.'
     _quiet: str = 'Suppress output logging about the training status.'
     _experiment: str = 'Experiment name that will be used to store results.'
+    _save_dense: str = 'Save more model checkpoints'
 
 def maybe_get_default_hparams():
     default_hparams = arg_utils.maybe_get_arg('default_hparams')

@@ -6,7 +6,7 @@ from cli import shared_args
 from environment import environment
 from foundations.runner import Runner
 import models.registry
-from training.callbacks import run_every_x_iters_for_first_y_epochs, save_state_dicts, standard_callbacks
+from training.callbacks import standard_callbacks
 from training.train import train
 from training.desc import TrainingDesc
 
@@ -14,6 +14,7 @@ from training.desc import TrainingDesc
 class TrainingRunner(Runner):
     training_desc: TrainingDesc
     experiment: str = 'main'
+    save_dense: bool = False
     
 
     @staticmethod
@@ -27,15 +28,14 @@ class TrainingRunner(Runner):
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'TrainingRunner':
-        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment)
+        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment, save_dense=args.save_dense)
     
     def run(self):
         print(f'running {self.description()}')
 
         train_loader = datasets.registry.get(self.training_desc.dataset_hparams)
         test_loader = datasets.registry.get(self.training_desc.dataset_hparams, False)
-        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader)
-        callbacks = [run_every_x_iters_for_first_y_epochs(5, 10, save_state_dicts)] + callbacks
+        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader, save_dense=self.save_dense)
 
         model = models.registry.get(self.training_desc.model_hparams).to(environment.device())
 

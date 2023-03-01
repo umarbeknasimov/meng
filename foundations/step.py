@@ -94,6 +94,15 @@ class Step:
             -1 if self._iteration == 0 else math.log2(self._iteration),
             self._iterations_per_epoch)
     
+    def __hash__(self):
+        return hash((self._iteration, self._iterations_per_epoch))
+    
     def get_log_2_steps(end_step: 'Step', iterations_per_epoch):
-        return ([Step.zero(iterations_per_epoch)] + [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(end_step.iteration)) + 1)])
+        return [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(end_step.iteration)) + 1)]
+    
+    def get_log_2_steps_dense(end_step: 'Step', iterations_per_epoch):
+        base_steps = Step.get_log_2_steps(end_step, iterations_per_epoch)
+        extra_steps = [Step.from_iteration(3 * 2**i, iterations_per_epoch) for i in range(int(math.log2(end_step.iteration/3)) + 1)]
+        return sorted(base_steps + extra_steps)
+
 
