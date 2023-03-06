@@ -124,7 +124,7 @@ class Model(nn.Module):
 
         training_hparams = hparams.TrainingHparams(
             momentum=0.9,
-            milestone_steps='80ep,120ep',
+            milestone_steps=None, #'80ep,120ep',
             lr=0.1,
             gamma=0.1,
             weight_decay=1e-4,

@@ -1,5 +1,4 @@
 import torch
-import math
 
 from datasets.base import DataLoader
 from foundations import paths
