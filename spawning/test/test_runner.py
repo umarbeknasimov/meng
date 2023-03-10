@@ -163,6 +163,35 @@ class TestRunner(test_case.TestCase):
                 self.assertTrue(environment.exists(runner._spawn_step_average_location(spawn_step, children_seeds)))
             else:
                 self.assertFalse(environment.exists(runner._spawn_step_location(spawn_step)))
+    
+    def test_get_w(self):
+        self.hparams.training_hparams.training_steps = '0ep1it'
+        self.hparams.training_hparams.milestone_steps = None
+
+        desc = SpawningDesc(
+            training_hparams=self.hparams.training_hparams,
+            dataset_hparams=self.hparams.dataset_hparams,
+            model_hparams=self.hparams.model_hparams,
+        )
+        children_seeds = [1, 2]
+        runner = SpawningRunner(desc=desc, children_data_order_seeds=children_seeds, save_dense=True)
+        path = os.path.join(environment.get_user_dir(), 'main', desc.hashname)
+        if environment.exists(path):
+            print('removing path')
+            shutil.rmtree(path)
+
+        runner.run()
+        parent_spawn_steps = desc.spawn_steps(save_dense=True)
+        for spawn_step in parent_spawn_steps:
+            parent_w = f'parent_{spawn_step.ep_it_str}'
+            self.assertStateEqual(runner.get_w(parent_w), environment.load(paths.model(runner._train_location(), spawn_step)))
+            average_spawn_step_path = runner._spawn_step_average_location(spawn_step, children_seeds)
+            for child_step in desc.children_saved_steps(save_dense=True):
+                for child_seed in children_seeds:
+                    child_w = f'child_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{child_seed}'
+                    self.assertTrue(runner.get_w(child_w), environment.load(paths.model(runner._spawn_step_child_location(spawn_step, child_seed), child_step)))
+                avg_w = f'avg_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{",".join([str(i) for i in children_seeds])}'
+                self.assertTrue(runner.get_w(avg_w), environment.load((paths.model(average_spawn_step_path, child_step))))
         
 
         

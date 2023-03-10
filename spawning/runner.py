@@ -1,11 +1,13 @@
 import argparse
 from dataclasses import dataclass
 from cli import shared_args
+import datasets.registry
 from environment import environment
 from foundations.callbacks import is_logger_info_saved
 from foundations.runner import Runner
 from foundations.hparams import TrainingHparams
 from foundations import paths
+from foundations.step import Step
 from spawning.average import standard_average
 from spawning.desc import SpawningDesc
 from training import train
@@ -145,6 +147,36 @@ class SpawningRunner(Runner):
     
     def _spawn_step_child_location(self, spawn_step, data_order_seed):
         return paths.seed(self._spawn_step_location(spawn_step), data_order_seed)
+    
+    def get_w(self, w_name: str):
+        """
+        get weights from a parent, child, or average model checkpoint
+
+        w_name should be:
+            parent_{train_step} for parent
+            child_{spawn_step}_{train_step}_{seed}
+            avg_{spawn_step}_{train_step}_{seeds}
+
+            where step is in ep_it_str format
+            seeds is comma separated
+        """
+        iterations_per_epoch = datasets.registry.get(self.desc.dataset_hparams).iterations_per_epoch
+        w_type = w_name.split('_')[0]
+        if w_type == 'parent':
+            train_step = Step.from_str(w_name.split('_')[1], iterations_per_epoch)
+            return environment.load(paths.model(self._train_location(), train_step))
+        elif w_type == 'child':
+            params = w_name.split('_')
+            spawn_step = Step.from_str(params[1], iterations_per_epoch)
+            train_step = Step.from_str(params[2], iterations_per_epoch)
+            seed = params[3]
+            return environment.load(paths.model(self._spawn_step_child_location(spawn_step, seed), train_step))
+        elif w_type == 'avg':
+            params = w_name.split('_')
+            spawn_step = Step.from_str(params[1], iterations_per_epoch)
+            train_step = Step.from_str(params[2], iterations_per_epoch)
+            seeds = [i for i in params[3].split(',')]
+            return environment.load(paths.model(self._spawn_step_average_location(spawn_step, seeds), train_step))
 
 
                 

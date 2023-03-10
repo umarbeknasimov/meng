@@ -1,4 +1,3 @@
-import numpy as np
 import datasets.registry
 from environment import environment
 from foundations import paths
@@ -12,6 +11,7 @@ from training.metric_logger import MetricLogger
 class TestCheckpointing(test_case.TestCase):
     def test_create_restore(self):
         hp = models.registry.get_default_hparams('cifar_resnet_20')
+        hp.training_hparams.milestone_steps = '80ep,120ep'
         model = models.registry.get(hp.model_hparams)
         optimizer = optimizers.get_optimizer(model, hp.training_hparams)
         scheduler = optimizers.get_lr_scheduler(hp.training_hparams, 400, optimizer)

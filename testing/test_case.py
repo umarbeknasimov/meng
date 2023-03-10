@@ -20,9 +20,15 @@ class TestCase(unittest.TestCase):
     
     @staticmethod
     def get_state(model):
-        """return copy of state of model"""
+        """return copy of state of model detached and converted to numpy"""
 
         return {k: v.clone().detach().cpu().numpy() for k, v in model.state_dict().items()}
+    
+    @staticmethod
+    def copy_state(model):
+        """return copy of state of model"""
+
+        return {k: v.clone() for k, v in model.state_dict().items()}
         
     def assertStateEqual(self, state1, state2):
         self.assertEqual(set(state1.keys()), set(state2.keys()))

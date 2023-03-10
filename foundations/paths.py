@@ -4,6 +4,10 @@ def _step(step): return step.ep_it_str
 
 def logger(root): return os.path.join(root, 'logger')
 
+def plane_metrics(root): return os.path.join(root, 'plane_metrics')
+
+def plane_grid(root): return os.path.join(root, 'plane_grid')
+
 def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
 
 def hparams(root): return os.path.join(root, 'hparams')
