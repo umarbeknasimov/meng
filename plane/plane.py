@@ -25,7 +25,7 @@ def get_plane_bases(weights1, weights2, weights3):
   return w_1, w_2, w_3, u_hat, v_hat
 
 def get_x_y(point, origin, u_hat, v_hat):
-  return torch.dot(point - origin, u_hat).item(), torch.dot(point - origin, v_hat)
+  return torch.dot(point - origin, u_hat).item(), torch.dot(point - origin, v_hat).item()
 
 def evaluate_plane(weights1, weights2, weights3, output_location, model_hparams, dataset_hparams, steps=10):
   w_1, w_2, w_3, u_hat, v_hat = get_plane_bases(weights1, weights2, weights3)
@@ -73,7 +73,7 @@ def evaluate_plane(weights1, weights2, weights3, output_location, model_hparams,
         x_i = x[i][j]
         y_i = y[i][j]
         P = w_1 + x_i * u_hat + y_i * v_hat
-        model = models.registry.get(model_hparams)
+        model = models.registry.get(model_hparams).to(environment.device())
         state_dict_new = state_dict.create_state_dict_w_o_batch_stats_from_x(model, P)
         model.load_state_dict(state_dict_new)
         interpolate.forward_pass(model, train_data)
