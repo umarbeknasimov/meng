@@ -20,6 +20,20 @@ def average_state_dicts(weights):
     new_state_dict[param_name] = torch.mean(stacked_weights, dim=0)
   return new_state_dict
 
+def average_optimizer_state_dicts(state_dicts):
+  if len(state_dicts) <= 0:
+    raise ValueError(f'can only average > 0 state_dicts but got {len(state_dicts)} state_dicts')
+  new_state_dict = {}
+  new_state_dict['param_groups'] = copy.deepcopy(state_dicts[0]['param_groups'])
+  new_state_dict['state'] = {}
+  for i, _ in state_dicts[0]['state'].items():
+    new_state_dict_i = {}
+    for param_name in state_dicts[0]['state'][0]:
+      stacked_weights = torch.stack([state_dict['state'][i][param_name] for state_dict in state_dicts], dim=0).to(torch.float64)
+      new_state_dict_i[param_name] = torch.mean(stacked_weights, dim=0)
+    new_state_dict['state'][i] = new_state_dict_i
+  return new_state_dict
+
 def forward_pass(model, dataloader):
     # used for batch norm stats
     model.train()

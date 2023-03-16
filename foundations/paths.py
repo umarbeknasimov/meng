@@ -18,11 +18,11 @@ def model(root, step): return os.path.join(root, f'model{_step(step)}.pth')
 
 def train(root): return os.path.join(root, 'train')
 
-def average(root): return os.path.join(root, 'average')
-
 def spawn_step(root, step): return os.path.join(root, _step(step))
 
 def seed(root, seed): return os.path.join(root, f'seed{seed}')
 
 def average(root, seeds): 
     return os.path.join(root, f'average{",".join([str(seed) for seed in seeds])}')
+
+def average_no_seeds(root): return os.path.join(root, 'average')
