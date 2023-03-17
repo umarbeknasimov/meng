@@ -89,6 +89,7 @@ class SplitMergeRunner:
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
         if models.registry.state_dicts_exist(self.parent_location(leg_i), self.desc.train_end_step):
             print(f'{indent}parent already exists')
+            return
         if leg_i == 0:
             train.standard_train(
                 model, output_location, self.desc.dataset_hparams, 
@@ -108,7 +109,7 @@ class SplitMergeRunner:
         # merge & save model state, optim state
         output_location = self.avg_location(leg_i)
         environment.exists_or_makedirs(output_location)
-        if models.registry.model_exists(output_location, self.desc.train_end_step) and is_logger_info_saved(output_location, child_step):
+        if models.registry.model_exists(output_location, self.desc.train_end_step) and is_logger_info_saved(output_location, self.desc.train_end_step):
             print(f'{indent}average already exists')
             return
 
