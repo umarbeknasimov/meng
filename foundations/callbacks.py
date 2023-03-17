@@ -1,6 +1,7 @@
 import torch
 
 from datasets.base import DataLoader
+from environment import environment
 from foundations import paths
 from foundations.step import Step
 from training.metric_logger import MetricLogger
@@ -31,6 +32,7 @@ def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
     return eval_callback
 
 def is_logger_info_saved(output_location: str, step: Step):
+    if not environment.exists(paths.logger(output_location)): return False
     logger = MetricLogger.create_from_file(output_location)
     eval_names = ['test_accuracy', 'train_accuracy', 'test_loss', 'train_loss']
     for eval_name in eval_names:
