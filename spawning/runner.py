@@ -43,7 +43,7 @@ class SpawningRunner(Runner):
             save_dense=args.save_dense)
     
     def _train(self):
-        location = self._train_location()
+        location = self.train_location()
         environment.exists_or_makedirs(location)
         
         if models.registry.state_dicts_exist(location, self.desc.train_end_step): 
@@ -53,7 +53,7 @@ class SpawningRunner(Runner):
         print('not all spawn steps saved so running train on parent')
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
-            pretrain_output_location = self._pretrain_location()
+            pretrain_output_location = self.pretrain_location()
             # load model weights from pretrained model
             train.standard_train(
                 model, location, self.desc.dataset_hparams, 
@@ -68,7 +68,7 @@ class SpawningRunner(Runner):
                 save_dense=self.save_dense)
     
     def _pretrain(self):
-        output_location = self._pretrain_location()
+        output_location = self.pretrain_location()
         environment.exists_or_makedirs(output_location)
         if models.registry.state_dicts_exist(output_location, self.desc.pretrain_end_step): 
             print('pretrain model already exists')
@@ -81,7 +81,7 @@ class SpawningRunner(Runner):
     def _spawn_and_train(self, spawn_step, data_order_seed):
         training_hparams = TrainingHparams.create_from_instance_and_dict(
             self.desc.training_hparams, {'data_order_seed': data_order_seed})
-        output_location = self._spawn_step_child_location(spawn_step, data_order_seed)
+        output_location = self.spawn_step_child_location(spawn_step, data_order_seed)
         environment.exists_or_makedirs(output_location)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
         if models.registry.state_dicts_exist(output_location, self.desc.train_end_step):
@@ -89,14 +89,14 @@ class SpawningRunner(Runner):
             return
         print(f'child doesn\'t exist so running train')
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
-        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self._train_location(), spawn_step, save_dense=self.save_dense)
+        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.train_location(), spawn_step, save_dense=self.save_dense)
     
     def _average(self, spawn_step, seeds):
         print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
 
-        output_location = self._spawn_step_average_location(spawn_step, seeds)
+        output_location = self.spawn_step_average_location(spawn_step, seeds)
         environment.exists_or_makedirs(output_location)
-        spawn_step_location = self._spawn_step_location(spawn_step)
+        spawn_step_location = self.spawn_step_location(spawn_step)
         environment.exists_or_makedirs(spawn_step_location)
 
         for child_step in self.desc.children_saved_steps(self.save_dense):
@@ -105,7 +105,9 @@ class SpawningRunner(Runner):
                 print('not running average')
                 continue
             print('running average')
-            standard_average(self.desc.dataset_hparams, self.desc.model_hparams, output_location, spawn_step_location, seeds, child_step)
+            standard_average(
+                self.desc.dataset_hparams, self.desc.model_hparams, 
+                self.desc.training_hparams, output_location, spawn_step_location, seeds, child_step)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
@@ -133,20 +135,20 @@ class SpawningRunner(Runner):
             if len(self.children_data_order_seeds) > 1:
                 self._average(spawn_step, self.children_data_order_seeds)
 
-    def _train_location(self):
+    def train_location(self):
         return self.desc.run_path(part='parent', experiment=self.experiment)
     
-    def _pretrain_location(self):
+    def pretrain_location(self):
         return self.desc.run_path(part='pretrain', experiment=self.experiment)
     
-    def _spawn_step_location(self, spawn_step):
+    def spawn_step_location(self, spawn_step):
         return paths.spawn_step(self.desc.run_path(part='children', experiment=self.experiment), spawn_step)
     
-    def _spawn_step_average_location(self, spawn_step, seeds):
-        return paths.average(self._spawn_step_location(spawn_step), seeds)
+    def spawn_step_average_location(self, spawn_step, seeds):
+        return paths.average(self.spawn_step_location(spawn_step), seeds)
     
-    def _spawn_step_child_location(self, spawn_step, data_order_seed):
-        return paths.seed(self._spawn_step_location(spawn_step), data_order_seed)
+    def spawn_step_child_location(self, spawn_step, data_order_seed):
+        return paths.seed(self.spawn_step_location(spawn_step), data_order_seed)
     
     def get_w(self, w_name: str):
         """
@@ -164,19 +166,19 @@ class SpawningRunner(Runner):
         w_type = w_name.split('_')[0]
         if w_type == 'parent':
             train_step = Step.from_str(w_name.split('_')[1], iterations_per_epoch)
-            return environment.load(paths.model(self._train_location(), train_step))
+            return environment.load(paths.model(self.train_location(), train_step))
         elif w_type == 'child':
             params = w_name.split('_')
             spawn_step = Step.from_str(params[1], iterations_per_epoch)
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seed = params[3]
-            return environment.load(paths.model(self._spawn_step_child_location(spawn_step, seed), train_step))
+            return environment.load(paths.model(self.spawn_step_child_location(spawn_step, seed), train_step))
         elif w_type == 'avg':
             params = w_name.split('_')
             spawn_step = Step.from_str(params[1], iterations_per_epoch)
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seeds = [i for i in params[3].split(',')]
-            return environment.load(paths.model(self._spawn_step_average_location(spawn_step, seeds), train_step))
+            return environment.load(paths.model(self.spawn_step_average_location(spawn_step, seeds), train_step))
 
 
                 

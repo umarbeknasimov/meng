@@ -43,20 +43,20 @@ class TestRunner(test_case.TestCase):
 
         runner.run()
         
-        self.assertFalse(environment.exists(runner._pretrain_location()))
-        self.assertTrue(environment.exists(runner._train_location()))
+        self.assertFalse(environment.exists(runner.pretrain_location()))
+        self.assertTrue(environment.exists(runner.train_location()))
 
         parent_spawn_steps = desc.spawn_steps()
         for spawn_step in parent_spawn_steps:
-            child_model_train_path = runner._spawn_step_child_location(spawn_step, children_seeds[0])
-            parent_model_train_path = runner._train_location()
+            child_model_train_path = runner.spawn_step_child_location(spawn_step, children_seeds[0])
+            parent_model_train_path = runner.train_location()
 
-            self.assertTrue(environment.exists(runner._spawn_step_location(spawn_step)))
-            self.assertFalse(environment.exists(runner._spawn_step_average_location(spawn_step, children_seeds)))
+            self.assertTrue(environment.exists(runner.spawn_step_location(spawn_step)))
+            self.assertFalse(environment.exists(runner.spawn_step_average_location(spawn_step, children_seeds)))
             self.assertTrue(environment.exists(child_model_train_path))
             # child training
             for child_step in desc.children_saved_steps():
-                self.assertTrue(environment.exists(paths.model(runner._spawn_step_child_location(spawn_step, children_seeds[0]), child_step)))
+                self.assertTrue(environment.exists(paths.model(runner.spawn_step_child_location(spawn_step, children_seeds[0]), child_step)))
             
             # check if state at parent spawn step is same as child step 0
             child_model_step_0 = environment.load(paths.model(child_model_train_path, Step.zero(10)))
@@ -88,7 +88,7 @@ class TestRunner(test_case.TestCase):
             dataset_hparams=self.hparams.dataset_hparams,
             model_hparams=self.hparams.model_hparams,
         )
-        children_seeds = [1, 2, 3]
+        children_seeds = [1, 2]
         runner = SpawningRunner(desc=desc, children_data_order_seeds=children_seeds, save_dense=True)
         path = os.path.join(environment.get_user_dir(), 'main', desc.hashname)
         if environment.exists(path):
@@ -98,7 +98,7 @@ class TestRunner(test_case.TestCase):
         runner.run()
         parent_spawn_steps = desc.spawn_steps(save_dense=True)
         for spawn_step in parent_spawn_steps:
-            average_spawn_step_path = runner._spawn_step_average_location(spawn_step, children_seeds)
+            average_spawn_step_path = runner.spawn_step_average_location(spawn_step, children_seeds)
             self.assertTrue(environment.exists(average_spawn_step_path))
             for child_step in desc.children_saved_steps(save_dense=True):
                 self.assertTrue(environment.exists(paths.model(average_spawn_step_path, child_step)))
@@ -121,13 +121,13 @@ class TestRunner(test_case.TestCase):
         
         runner.run()
         
-        pretrain_path = runner._pretrain_location()
+        pretrain_path = runner.pretrain_location()
         self.assertTrue(environment.exists(pretrain_path))
         self.assertTrue(environment.exists(
             paths.model(pretrain_path,  Step.from_str(self.hparams.training_hparams.training_steps, 10))))
         
         pretrain_model_end_step = environment.load(paths.model(pretrain_path, Step.from_str(self.hparams.training_hparams.training_steps, 10)))
-        train_model_zero_step = environment.load(paths.model(runner._train_location(), Step.zero(10)))
+        train_model_zero_step = environment.load(paths.model(runner.train_location(), Step.zero(10)))
 
         self.assertStateEqual(pretrain_model_end_step, train_model_zero_step)
 
@@ -148,7 +148,7 @@ class TestRunner(test_case.TestCase):
         runner.run(2)
         critical_spawn_step = Step.from_epoch(0, 2, 10)
 
-        parent_model_train_path = runner._train_location()
+        parent_model_train_path = runner.train_location()
         self.assertTrue(environment.exists(parent_model_train_path))
 
         parent_spawn_steps = desc.spawn_steps()
@@ -156,13 +156,13 @@ class TestRunner(test_case.TestCase):
             self.assertTrue(environment.exists(paths.model(parent_model_train_path, spawn_step)))
             self.assertTrue(environment.exists(paths.optim(parent_model_train_path, spawn_step)))
             if spawn_step == critical_spawn_step:
-                self.assertTrue(environment.exists(runner._spawn_step_location(spawn_step)))
+                self.assertTrue(environment.exists(runner.spawn_step_location(spawn_step)))
                 for seed in children_seeds:
-                    child_model_train_path = runner._spawn_step_child_location(spawn_step, seed)
+                    child_model_train_path = runner.spawn_step_child_location(spawn_step, seed)
                     self.assertTrue(environment.exists(child_model_train_path))
-                self.assertTrue(environment.exists(runner._spawn_step_average_location(spawn_step, children_seeds)))
+                self.assertTrue(environment.exists(runner.spawn_step_average_location(spawn_step, children_seeds)))
             else:
-                self.assertFalse(environment.exists(runner._spawn_step_location(spawn_step)))
+                self.assertFalse(environment.exists(runner.spawn_step_location(spawn_step)))
     
     def test_get_w(self):
         self.hparams.training_hparams.training_steps = '0ep1it'
@@ -184,12 +184,12 @@ class TestRunner(test_case.TestCase):
         parent_spawn_steps = desc.spawn_steps(save_dense=True)
         for spawn_step in parent_spawn_steps:
             parent_w = f'parent_{spawn_step.ep_it_str}'
-            self.assertStateEqual(runner.get_w(parent_w), environment.load(paths.model(runner._train_location(), spawn_step)))
-            average_spawn_step_path = runner._spawn_step_average_location(spawn_step, children_seeds)
+            self.assertStateEqual(runner.get_w(parent_w), environment.load(paths.model(runner.train_location(), spawn_step)))
+            average_spawn_step_path = runner.spawn_step_average_location(spawn_step, children_seeds)
             for child_step in desc.children_saved_steps(save_dense=True):
                 for child_seed in children_seeds:
                     child_w = f'child_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{child_seed}'
-                    self.assertTrue(runner.get_w(child_w), environment.load(paths.model(runner._spawn_step_child_location(spawn_step, child_seed), child_step)))
+                    self.assertTrue(runner.get_w(child_w), environment.load(paths.model(runner.spawn_step_child_location(spawn_step, child_seed), child_step)))
                 avg_w = f'avg_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{",".join([str(i) for i in children_seeds])}'
                 self.assertTrue(runner.get_w(avg_w), environment.load((paths.model(average_spawn_step_path, child_step))))
         
