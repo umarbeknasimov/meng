@@ -1,15 +1,8 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from foundations import hparams
 from training.desc import TrainingDesc
-
-def init_fn(w):
-  if isinstance(w, torch.nn.Linear) or isinstance(w, torch.nn.Conv2d):
-    torch.nn.init.kaiming_normal_(w.weight)
-  if isinstance(w, torch.nn.BatchNorm2d):
-    w.weight.data = torch.rand(w.weight.data.shape)
-    w.bias.data = torch.zeros_like(w.bias.data)
+from . import registry
 
 class Model(nn.Module):
     """A residual neural network as originally designed for CIFAR-10."""
@@ -64,7 +57,7 @@ class Model(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
 
         # Initialize.
-        self.apply(init_fn)
+        self.apply(registry.init_fn)
 
     def forward(self, x):
         out = F.relu(self.bn(self.conv(x)))
