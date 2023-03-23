@@ -66,8 +66,16 @@ class SplitMergeRunner:
         indent = " " * 2
         for seed in self.children_data_order_seeds:
             print(f'{indent}training child with seed {seed}')
-            training_hparams = TrainingHparams.create_from_instance_and_dict(
-                self.desc.training_hparams, {'data_order_seed': seed})
+            if self.desc.strategy == 'decrease_lr':
+                training_hparams = TrainingHparams.create_from_instance_and_dict(
+                    self.desc.training_hparams, 
+                    {
+                        'data_order_seed': seed,
+                        'lr': round(self.desc.training_hparams.lr * (0.95 ** leg_i), 5)
+                    })
+            else:
+                training_hparams = TrainingHparams.create_from_instance_and_dict(
+                    self.desc.training_hparams, {'data_order_seed': seed})
             output_location = self.child_location(leg_i, seed)
             if models.registry.state_dicts_exist(self.child_location(leg_i, seed), self.desc.train_end_step):
                 print(f'{indent}skipping training child with seed {seed}')
@@ -98,24 +106,34 @@ class SplitMergeRunner:
         if models.registry.state_dicts_exist(self.parent_location(leg_i), self.desc.train_end_step):
             print(f'{indent}parent already exists')
             return
+        
+        if self.desc.strategy == 'decrease_lr':
+            training_hparams = TrainingHparams.create_from_instance_and_dict(
+                self.desc.training_hparams, 
+                {
+                    'lr': round(self.desc.training_hparams.lr * (0.9 ** leg_i), 5)
+                })
+        else:
+            training_hparams = self.desc.training_hparams
+        
         if leg_i == 0:
             train.standard_train(
                 model, output_location, self.desc.dataset_hparams, 
-                self.desc.training_hparams,
+                training_hparams,
                 save_dense=True)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
                 train.standard_train(
                     model, output_location, self.desc.dataset_hparams, 
-                    self.desc.training_hparams, pretrain_output_location, 
+                    training_hparams, pretrain_output_location, 
                     self.desc.train_end_step,
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
             else:
                 train.standard_train(
                     model, output_location, self.desc.dataset_hparams, 
-                    self.desc.training_hparams, pretrain_output_location, 
+                    training_hparams, pretrain_output_location, 
                     self.desc.train_end_step,
                     save_dense=True)
 
