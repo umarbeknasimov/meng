@@ -25,7 +25,7 @@ from cli import shared_args
 from environment import environment
 from foundations import paths
 from foundations.callbacks import is_logger_info_saved
-from foundations.hparams import TrainingHparams
+from foundations.hparams import DatasetHparams, TrainingHparams
 import models.registry
 from spawning.average import standard_average
 from split_merge.desc import SplitMergeDesc
@@ -116,23 +116,32 @@ class SplitMergeRunner:
         else:
             training_hparams = self.desc.training_hparams
         
+        if self.desc.strategy == 'increase_batch_size':
+            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
+                self.desc.dataset_hparams, 
+                {
+                    'batch_size': self.desc.dataset_hparams.batch_size * len(self.children_data_order_seeds)
+                })
+        else:
+            dataset_hparams = self.desc.dataset_hparams
+        
         if leg_i == 0:
             train.standard_train(
-                model, output_location, self.desc.dataset_hparams, 
+                model, output_location, dataset_hparams, 
                 training_hparams,
                 save_dense=True)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
                 train.standard_train(
-                    model, output_location, self.desc.dataset_hparams, 
+                    model, output_location, dataset_hparams, 
                     training_hparams, pretrain_output_location, 
                     self.desc.train_end_step,
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
             else:
                 train.standard_train(
-                    model, output_location, self.desc.dataset_hparams, 
+                    model, output_location, dataset_hparams, 
                     training_hparams, pretrain_output_location, 
                     self.desc.train_end_step,
                     save_dense=True)
