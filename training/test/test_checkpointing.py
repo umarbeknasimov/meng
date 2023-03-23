@@ -4,7 +4,7 @@ from foundations import paths
 from foundations.step import Step
 import models.registry
 from testing import test_case
-from training import checkpointing, optimizers
+from training import callbacks, checkpointing, optimizers
 from training.metric_logger import MetricLogger
 
 
@@ -50,7 +50,7 @@ class TestCheckpointing(test_case.TestCase):
         self.assertEqual(str(logger), str(logger2))
 
         self.assertStateEqual(model.state_dict(), model2.state_dict())
-        self.assertOptimizerEqual(optimizer, optimizer2)
+        self.assertOptimizerEqual(optimizer.state_dict(), optimizer2.state_dict())
         self.assertSchedulerEqual(scheduler, scheduler2)
     
     def test_create_restore_no_scheduler(self):
@@ -83,6 +83,44 @@ class TestCheckpointing(test_case.TestCase):
         self.assertEqual(str(logger), str(logger2))
 
         self.assertStateEqual(model.state_dict(), model2.state_dict())
-        self.assertOptimizerEqual(optimizer, optimizer2)
-        
+        self.assertOptimizerEqual(optimizer.state_dict(), optimizer2.state_dict())
+    
+    def test_load_pretrained(self):
+        hp = models.registry.get_default_hparams('cifar_resnet_20')
+        model = models.registry.get(hp.model_hparams)
+        optimizer = optimizers.get_optimizer(model, hp.training_hparams)
+        dataloader = iter(datasets.registry.get(hp.dataset_hparams))
+        step = Step.from_epoch(13, 27, 400)
+
+        examples, labels = next(dataloader)
+        optimizer.zero_grad()
+        model.train()
+        model.loss_criterion(model(examples), labels).backward()
+        optimizer.step()
+
+        callbacks.save_state_dicts(self.root, step, model, optimizer, None, None)
+        self.assertTrue(models.registry.state_dicts_exist(self.root, step))
+
+        # new model
+        model2 = models.registry.get(hp.model_hparams)
+        optimizer2 = optimizers.get_optimizer(model2, hp.training_hparams)
+
+        examples2, labels2 = next(dataloader)
+        optimizer2.zero_grad()
+        model2.train()
+        model2.loss_criterion(model2(examples2), labels2).backward()
+        optimizer2.step()
+
+        checkpointing.load_pretrained(self.root, step, model2, optimizer2, None, True)
+
+        self.assertStateEqual(model.state_dict(), model2.state_dict())
+        self.assertOptimizerNotEqual(optimizer.state_dict(), optimizer2.state_dict())
+
+        model3 = models.registry.get(hp.model_hparams)
+        optimizer3 = optimizers.get_optimizer(model3, hp.training_hparams)
+
+        checkpointing.load_pretrained(self.root, step, model3, optimizer3, None, False)
+        self.assertStateEqual(model.state_dict(), model3.state_dict())
+        self.assertOptimizerEqual(optimizer.state_dict(), optimizer3.state_dict())
+
 test_case.main()

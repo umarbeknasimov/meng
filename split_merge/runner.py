@@ -76,11 +76,19 @@ class SplitMergeRunner:
             pretrain_output_location = self.parent_location(leg_i)
             environment.exists_or_makedirs(output_location)
             model = models.registry.get(self.desc.model_hparams).to(environment.device())
-            train.standard_train(
+            if self.desc.strategy == 'restart_optimizer':
+                train.standard_train(
                 model, output_location, 
                 self.desc.dataset_hparams, training_hparams, 
                 pretrain_output_location, self.desc.train_end_step, 
+                pretrain_load_only_model_weights=True,
                 save_dense=True)
+            else:
+                train.standard_train(
+                    model, output_location, 
+                    self.desc.dataset_hparams, training_hparams, 
+                    pretrain_output_location, self.desc.train_end_step, 
+                    save_dense=True)
 
     def _train_parent(self, leg_i):
         indent = " " * 1
@@ -97,11 +105,19 @@ class SplitMergeRunner:
                 save_dense=True)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
-            train.standard_train(
-                model, output_location, self.desc.dataset_hparams, 
-                self.desc.training_hparams, pretrain_output_location, 
-                self.desc.train_end_step,
-                save_dense=True)
+            if self.desc.strategy == 'restart_optimizer':
+                train.standard_train(
+                    model, output_location, self.desc.dataset_hparams, 
+                    self.desc.training_hparams, pretrain_output_location, 
+                    self.desc.train_end_step,
+                    pretrain_load_only_model_weights=True,
+                    save_dense=True)
+            else:
+                train.standard_train(
+                    model, output_location, self.desc.dataset_hparams, 
+                    self.desc.training_hparams, pretrain_output_location, 
+                    self.desc.train_end_step,
+                    save_dense=True)
 
     def _merge_children(self, leg_i):
         indent = " " * 2

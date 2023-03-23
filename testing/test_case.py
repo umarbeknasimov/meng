@@ -50,6 +50,14 @@ class TestCase(unittest.TestCase):
         mom2 = optimizer2['state'][optimizer2['param_groups'][0]['params'][0]]['momentum_buffer']
         self.assertTrue(np.array_equal(mom1.numpy(), mom2.numpy()))
     
+    def assertOptimizerNotEqual(self, optimizer1, optimizer2):
+        if 'momentum_buffer' not in optimizer1['state'][optimizer1['param_groups'][0]['params'][0]]:
+            self.assertNotIn('momentum_buffer', optimizer2['state'][optimizer2['param_groups'][0]['params'][0]])
+            return
+        mom1 = optimizer1['state'][optimizer1['param_groups'][0]['params'][0]]['momentum_buffer']
+        mom2 = optimizer2['state'][optimizer2['param_groups'][0]['params'][0]]['momentum_buffer']
+        self.assertFalse(np.array_equal(mom1.numpy(), mom2.numpy()))
+    
     def assertSchedulerEqual(self, scheduler1, scheduler2):
         self.assertEqual(scheduler1.state_dict()['_step_count'], scheduler2.state_dict()['_step_count'])
 

@@ -15,6 +15,7 @@ class SplitMergeDesc(desc.Desc):
     training_hparams: TrainingHparams
     dataset_hparams: DatasetHparams
     model_hparams: ModelHparams
+    strategy: str = None
 
     @staticmethod
     def name_prefix(): return 'split_merge'
@@ -24,13 +25,14 @@ class SplitMergeDesc(desc.Desc):
         hparams.DatasetHparams.add_args(parser, defaults=defaults.dataset_hparams if defaults else None)
         hparams.TrainingHparams.add_args(parser, defaults=defaults.training_hparams if defaults else None)
         hparams.ModelHparams.add_args(parser, defaults=defaults.model_hparams if defaults else None)
+        parser.add_argument('--strategy', type=str, default=None)
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'SplitMergeDesc':
         dataset_hparams = hparams.DatasetHparams.create_from_args(args)
         training_hparams = hparams.TrainingHparams.create_from_args(args)
         model_hparams = hparams.ModelHparams.create_from_args(args)
-        return SplitMergeDesc(training_hparams, dataset_hparams, model_hparams)
+        return SplitMergeDesc(training_hparams, dataset_hparams, model_hparams, args.strategy)
         
     def run_path(self, part='main', experiment='main'):
         path = os.path.join(
