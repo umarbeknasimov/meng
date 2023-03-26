@@ -3,9 +3,9 @@ import torch.nn.functional as F
 from environment import environment
 from foundations import paths
 from foundations.hparams import ModelHparams
-from models import cifar_resnet, cifar_vgg
+from models import cifar_resnet, cifar_resnet_layernorm, cifar_vgg
 
-registered_models = [cifar_resnet.Model, cifar_vgg.Model]
+registered_models = [cifar_resnet.Model, cifar_vgg.Model, cifar_resnet_layernorm.Model]
 
 def model_exists(save_location, save_step):
     return environment.exists(paths.model(save_location, save_step))

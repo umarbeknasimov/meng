@@ -133,6 +133,7 @@ class SplitMergeRunner:
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
+                print('restarting optimizer')
                 train.standard_train(
                     model, output_location, dataset_hparams, 
                     training_hparams, pretrain_output_location, 
