@@ -28,7 +28,7 @@ def average_optimizer_state_dicts(state_dicts):
   new_state_dict['state'] = {}
   for i, _ in state_dicts[0]['state'].items():
     new_state_dict_i = {}
-    for param_name in state_dicts[0]['state'][0]:
+    for param_name in state_dicts[0]['state'][0]: # checking for param_name, in our case is just 'momentum_buffer'
       if state_dicts[0]['state'][0][param_name] is not None:
         stacked_weights = torch.stack([state_dict['state'][i][param_name] for state_dict in state_dicts], dim=0).to(torch.float64)
         new_state_dict_i[param_name] = torch.mean(stacked_weights, dim=0)

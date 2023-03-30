@@ -5,6 +5,7 @@ from foundations import hparams
 from training.desc import TrainingDesc
 from . import registry, cifar_resnet
 
+# not used in this implementation but kept for reference
 class LayerNorm(nn.Module):
     r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. 
     The ordering of the dimensions in the inputs. channels_last corresponds to inputs with 
@@ -27,18 +28,8 @@ class LayerNorm(nn.Module):
         elif self.data_format == "channels_first":
             return F.layer_norm(x.permute(0, 2, 3, 1), self.normalized_shape, self.weight, self.bias, self.eps).permute(0, 3, 1, 2)
 
-def calc_activation_shape(
-        dim, ksize, dilation=1, stride=1, padding=0
-    ):
-        # def shape_each_dim(i):
-        #     odim_i = dim[i] + 2 * padding[i] - dilation[i] * (ksize[i] - 1) - 1
-        #     return (odim_i / stride[i]) + 1
-
-        # return shape_each_dim(0), shape_each_dim(1)
-    
-        odim_i = dim + 2 * padding - dilation * (ksize - 1) - 1
-        l = (odim_i / stride) + 1
-        return int(l), int(l)
+def permute_and_apply(x, norm):
+    return norm(x.permute(0, 2, 3, 1)).permute(0, 3, 1, 2)
 
 class Model(nn.Module):
     """A residual neural network as originally designed for CIFAR-10."""
@@ -51,27 +42,29 @@ class Model(nn.Module):
 
             stride = 2 if downsample else 1
             self.conv1 = nn.Conv2d(f_in, f_out, kernel_size=3, stride=stride, padding=1, bias=False)
-            self.n1 = LayerNorm(f_out, data_format='channels_first')
-            # self.n1 = nn.LayerNorm([f_out, *calc_activation_shape(f_in, 3, stride=stride, padding=1)])
+            self.n1 = nn.LayerNorm(f_out)
             self.conv2 = nn.Conv2d(f_out, f_out, kernel_size=3, stride=1, padding=1, bias=False)
-            self.n2 = LayerNorm(f_out, data_format='channels_first')
-            # self.n2 = nn.LayerNorm([f_out, *calc_activation_shape(f_out, 3, stride=stride, padding=1)])
+            self.n2 = nn.LayerNorm(f_out)
 
             # No parameters for shortcut connections.
             if downsample or f_in != f_out:
                 self.shortcut = nn.Sequential(
                     nn.Conv2d(f_in, f_out, kernel_size=1, stride=2, bias=False),
-                    LayerNorm(f_out, data_format='channels_first')
+                    nn.LayerNorm(f_out)
                     )
             else:
-                self.shortcut = nn.Sequential()
+                self.shortcut = nn.Sequential(
+                    nn.Sequential(),
+                    nn.Sequential()
+                )
 
         def forward(self, x):
             out = self.conv1(x)
-            out = F.relu(self.n1(out))
+            out = F.relu(permute_and_apply(out, self.n1))
             out = self.conv2(out)
-            out = self.n2(out)
-            out += self.shortcut(x)
+            out = permute_and_apply(out, self.n2)
+            shortcut = permute_and_apply(self.shortcut[0](x), self.shortcut[1])
+            out += shortcut
             return F.relu(out)
 
     def __init__(self, plan, outputs=None):
@@ -81,8 +74,7 @@ class Model(nn.Module):
         # Initial convolution.
         current_filters = plan[0][0]
         self.conv = nn.Conv2d(3, current_filters, kernel_size=3, stride=1, padding=1, bias=False)
-        # self.n = nn.LayerNorm([current_filters, *calc_activation_shape(32, 3, stride=1, padding=1)])
-        self.n = LayerNorm(current_filters, data_format='channels_first')
+        self.n = nn.LayerNorm(current_filters)
 
         # The subsequent blocks of the ResNet.
         blocks = []
@@ -102,7 +94,7 @@ class Model(nn.Module):
         self.apply(registry.init_fn)
 
     def forward(self, x):
-        out = F.relu(self.n(self.conv(x)))
+        out = F.relu(permute_and_apply(self.conv(x), self.n))
         out = self.blocks(out)
         out = F.avg_pool2d(out, out.size()[3])
         out = out.view(out.size(0), -1)
@@ -156,4 +148,3 @@ class Model(nn.Module):
     @property
     def loss_criterion(self):
         return nn.CrossEntropyLoss()
-
