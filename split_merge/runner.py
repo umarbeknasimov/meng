@@ -20,12 +20,14 @@
 
 import argparse
 from dataclasses import dataclass
+import datasets.registry
 import os
 from cli import shared_args
 from environment import environment
 from foundations import paths
 from foundations.callbacks import is_logger_info_saved
 from foundations.hparams import DatasetHparams, TrainingHparams
+from foundations.step import Step
 import models.registry
 from spawning.average import standard_average
 from split_merge.desc import SplitMergeDesc
@@ -37,6 +39,7 @@ class SplitMergeRunner:
     children_data_order_seeds: list
     num_legs: int = 10
     experiment: str = 'main'
+    use_init_model: bool = False
 
     @staticmethod
     def description():
@@ -52,6 +55,7 @@ class SplitMergeRunner:
     def _add_extra_params(parser: argparse.ArgumentParser):
         parser.add_argument('--children_data_order_seeds', type=int, nargs='+', required=True)
         parser.add_argument('--num_legs', type=int, required=True)
+        parser.add_argument('--use_init_model', action='store_true', default=False)
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'SplitMergeRunner':
@@ -59,7 +63,8 @@ class SplitMergeRunner:
             SplitMergeDesc.create_from_args(args), 
             children_data_order_seeds=args.children_data_order_seeds, 
             num_legs=args.num_legs,
-            experiment=args.experiment)
+            experiment=args.experiment,
+            use_init_model=args.use_init_model)
     
     def _train_children(self, leg_i):
         # train children for s steps
@@ -126,10 +131,22 @@ class SplitMergeRunner:
             dataset_hparams = self.desc.dataset_hparams
         
         if leg_i == 0:
-            train.standard_train(
-                model, output_location, dataset_hparams, 
-                training_hparams,
-                save_dense=True)
+            if self.use_init_model:
+                print('using init model')
+                init_model_location = self.desc.run_path(
+                    part='init_model', experiment=self.experiment)
+                iterations_per_epoch = datasets.registry.get(dataset_hparams, train=True).iterations_per_epoch
+                train.standard_train(
+                    model, output_location, dataset_hparams, 
+                    training_hparams, init_model_location, 
+                    Step.zero(iterations_per_epoch),
+                    pretrain_load_only_model_weights=True,
+                    save_dense=True)
+            else:
+                train.standard_train(
+                    model, output_location, dataset_hparams, 
+                    training_hparams,
+                    save_dense=True)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
