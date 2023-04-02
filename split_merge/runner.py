@@ -125,7 +125,7 @@ class SplitMergeRunner:
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
-                    'batch_size': self.desc.dataset_hparams.batch_size * len(self.children_data_order_seeds)
+                    'batch_size': self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**2)
                 })
         else:
             dataset_hparams = self.desc.dataset_hparams
