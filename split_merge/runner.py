@@ -157,6 +157,14 @@ class SplitMergeRunner:
                     self.desc.train_end_step,
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
+            elif self.desc.strategy == 'pick_child':
+                print('picking random child')
+                pretrain_output_location = self.child_location(leg_i - 1, self.children_data_order_seeds[0])
+                train.standard_train(
+                    model, output_location, dataset_hparams, 
+                    training_hparams, pretrain_output_location, 
+                    self.desc.train_end_step,
+                    save_dense=True)
             else:
                 train.standard_train(
                     model, output_location, dataset_hparams, 
