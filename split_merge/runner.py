@@ -81,6 +81,15 @@ class SplitMergeRunner:
             else:
                 training_hparams = TrainingHparams.create_from_instance_and_dict(
                     self.desc.training_hparams, {'data_order_seed': seed})
+            if self.desc.strategy == 'subsample':
+                dataset_hparams = DatasetHparams.create_from_instance_and_dict(
+                    self.desc.dataset_hparams, 
+                    {
+                        'transformation_seed': seed,
+                        'subsample_fraction': 1/len(self.children_data_order_seeds)
+                    })
+            else:
+                dataset_hparams = self.desc.dataset_hparams
             output_location = self.child_location(leg_i, seed)
             if models.registry.state_dicts_exist(self.child_location(leg_i, seed), self.desc.train_end_step):
                 print(f'{indent}skipping training child with seed {seed}')
@@ -92,14 +101,14 @@ class SplitMergeRunner:
             if self.desc.strategy == 'restart_optimizer':
                 train.standard_train(
                 model, output_location, 
-                self.desc.dataset_hparams, training_hparams, 
+                dataset_hparams, training_hparams, 
                 pretrain_output_location, self.desc.train_end_step, 
                 pretrain_load_only_model_weights=True,
                 save_dense=True)
             else:
                 train.standard_train(
                     model, output_location, 
-                    self.desc.dataset_hparams, training_hparams, 
+                    dataset_hparams, training_hparams, 
                     pretrain_output_location, self.desc.train_end_step, 
                     save_dense=True)
 
