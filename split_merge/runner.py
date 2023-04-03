@@ -83,7 +83,7 @@ class SplitMergeRunner:
                     self.desc.training_hparams, {'data_order_seed': seed})
 
             output_location = self.child_location(leg_i, seed)
-            if models.registry.state_dicts_exist(self.child_location(leg_i, seed), self.child_train_end_step):
+            if models.registry.state_dicts_exist(self.child_location(leg_i, seed), self.child_train_end_step(leg_i)):
                 print(f'{indent}skipping training child with seed {seed}')
                 continue
 
@@ -93,15 +93,15 @@ class SplitMergeRunner:
             if self.desc.strategy == 'restart_optimizer':
                 train.standard_train(
                     model, output_location, 
-                    self.child_dataset_hparams, training_hparams, 
-                    pretrain_output_location, self.parent_train_end_step, 
+                    self.child_dataset_hparams(leg_i), training_hparams, 
+                    pretrain_output_location, self.parent_train_end_step(leg_i), 
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
             else:
                 train.standard_train(
                     model, output_location, 
-                    self.child_dataset_hparams, training_hparams, 
-                    pretrain_output_location, self.parent_train_end_step, 
+                    self.child_dataset_hparams(leg_i), training_hparams, 
+                    pretrain_output_location, self.parent_train_end_step(leg_i), 
                     save_dense=True)
 
     def _train_parent(self, leg_i):
@@ -109,7 +109,7 @@ class SplitMergeRunner:
         print(f'{indent}training parent')
         output_location = self.parent_location(leg_i)
         model = models.registry.get(self.desc.model_hparams).to(environment.device())
-        if models.registry.state_dicts_exist(self.parent_location(leg_i), self.parent_train_end_step):
+        if models.registry.state_dicts_exist(self.parent_location(leg_i), self.parent_train_end_step(leg_i)):
             print(f'{indent}parent already exists')
             return
         
@@ -122,30 +122,21 @@ class SplitMergeRunner:
         else:
             training_hparams = self.desc.training_hparams
         
-        if self.desc.strategy == 'increase_batch_size':
-            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
-                self.desc.dataset_hparams, 
-                {
-                    'batch_size': self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**2)
-                })
-        else:
-            dataset_hparams = self.desc.dataset_hparams
-        
         if leg_i == 0:
             if self.use_init_model:
                 print('using init model')
                 init_model_location = self.desc.run_path(
                     part='init_model', experiment=self.experiment)
-                iterations_per_epoch = datasets.registry.get(dataset_hparams, train=True).iterations_per_epoch
+                iterations_per_epoch = datasets.registry.get(self.desc.dataset_hparams, train=True).iterations_per_epoch
                 train.standard_train(
-                    model, output_location, dataset_hparams, 
+                    model, output_location, self.parent_dataset_hparams(0), 
                     training_hparams, init_model_location, 
                     Step.zero(iterations_per_epoch),
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
             else:
                 train.standard_train(
-                    model, output_location, dataset_hparams, 
+                    model, output_location, self.parent_dataset_hparams(0), 
                     training_hparams,
                     save_dense=True)
         else:
@@ -153,24 +144,24 @@ class SplitMergeRunner:
             if self.desc.strategy == 'restart_optimizer':
                 print('restarting optimizer')
                 train.standard_train(
-                    model, output_location, dataset_hparams, 
+                    model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step,
+                    self.child_train_end_step(leg_i - 1),
                     pretrain_load_only_model_weights=True,
                     save_dense=True)
             elif self.desc.strategy == 'pick_child':
                 print('picking random child')
                 pretrain_output_location = self.child_location(leg_i - 1, self.children_data_order_seeds[0])
                 train.standard_train(
-                    model, output_location, dataset_hparams, 
+                    model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step,
+                    self.child_train_end_step(leg_i - 1),
                     save_dense=True)
             else:
                 train.standard_train(
-                    model, output_location, dataset_hparams, 
+                    model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step,
+                    self.child_train_end_step(leg_i - 1),
                     save_dense=True)
 
     def _merge_children(self, leg_i):
@@ -179,52 +170,60 @@ class SplitMergeRunner:
         # merge & save model state, optim state
         output_location = self.avg_location(leg_i)
         environment.exists_or_makedirs(output_location)
-        if models.registry.model_exists(output_location, self.child_train_end_step) and is_logger_info_saved(output_location, self.child_train_end_step):
+        if models.registry.model_exists(output_location, self.child_train_end_step(leg_i)) and is_logger_info_saved(output_location, self.child_train_end_step(leg_i)):
             print(f'{indent}average already exists')
             return
 
         standard_average(
             self.desc.dataset_hparams, self.desc.model_hparams, self.desc.training_hparams,
             self.avg_location(leg_i), self.leg_i_location(leg_i), 
-            self.children_data_order_seeds, self.child_train_end_step)
+            self.children_data_order_seeds, self.child_train_end_step(leg_i))
     
-    @property 
-    def child_dataset_hparams(self):
+    def child_dataset_hparams(self, leg_i):
         if self.desc.strategy == 'subsample':
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
                     'subsample_fraction': 1/len(self.children_data_order_seeds)
                 })
+        elif self.desc.strategy == 'continue_increase_batch_size':
+            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
+                self.desc.dataset_hparams, 
+                {
+                    'batch_size': int(self.desc.dataset_hparams.batch_size * (2**leg_i))
+                })
         else:
             dataset_hparams = self.desc.dataset_hparams
         return dataset_hparams
     
-    @property
-    def parent_dataset_hparams(self):
+    def parent_dataset_hparams(self, leg_i):
         if self.desc.strategy == 'increase_batch_size':
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
                     'batch_size': self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**2)
                 })
+        elif self.desc.strategy == 'continue_increase_batch_size':
+            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
+                self.desc.dataset_hparams, 
+                {
+                    'batch_size': int(self.desc.dataset_hparams.batch_size * (2**leg_i))
+                })
         else:
             dataset_hparams = self.desc.dataset_hparams
         return dataset_hparams
     
-    def end_step(self, of_parent=True):
+    def end_step(self, leg_i, of_parent=True):
         return Step.from_str(
             self.desc.training_hparams.training_steps, 
             datasets.registry.get(
-                self.parent_dataset_hparams if of_parent else self.child_dataset_hparams).iterations_per_epoch)
+                self.parent_dataset_hparams(leg_i) if of_parent else self.child_dataset_hparams(leg_i)).iterations_per_epoch)
     
-    @property
-    def parent_train_end_step(self):
-        return self.end_step()
+    def parent_train_end_step(self, leg_i):
+        return self.end_step(leg_i)
 
-    @property
-    def child_train_end_step(self):
-        return self.end_step(False)
+    def child_train_end_step(self, leg_i):
+        return self.end_step(leg_i, False)
 
     def run(self):
         # train
