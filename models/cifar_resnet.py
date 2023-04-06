@@ -116,6 +116,7 @@ class Model(nn.Module):
         )
 
         training_hparams = hparams.TrainingHparams(
+            optimizer_name='sgd',
             momentum=0.9,
             milestone_steps=None, #'80ep,120ep',
             lr=0.1,

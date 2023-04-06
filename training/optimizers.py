@@ -7,10 +7,25 @@ from foundations.hparams import TrainingHparams
 from foundations.step import Step
 
 def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                    momentum=args.momentum,
-                                    weight_decay=args.weight_decay)
-    return optimizer
+    if args.optimizer_name == 'sgd':
+        return torch.optim.SGD(model.parameters(), args.lr,
+                                        momentum=args.momentum,
+                                        weight_decay=args.weight_decay)
+    elif args.optimizer_name == 'adam':
+        return torch.optim.Adam(
+            model.parameters(),
+            lr=args.lr,
+            weight_decay=args.weight_decay
+        )
+
+    elif args.optimizer_name == 'adamw':
+        return torch.optim.AdamW(
+            model.parameters(),
+            lr=args.lr,
+            weight_decay=args.weight_decay
+        )
+    
+    raise ValueError(f'no such optimizer {args.optimizer_name}')
 
 def get_lr_scheduler(args: TrainingHparams, iterations_per_epoch: int, optimizer: Optimizer) -> MultiStepLR:
     if args.milestone_steps is None:

@@ -7,7 +7,7 @@ from environment import environment
 from foundations.runner import Runner
 import models.registry
 from training.callbacks import standard_callbacks
-from training.train import train
+from training.train import standard_train
 from training.desc import TrainingDesc
 
 @dataclass
@@ -33,9 +33,9 @@ class TrainingRunner(Runner):
     def run(self):
         print(f'running {self.description()}')
 
-        train_loader = datasets.registry.get(self.training_desc.dataset_hparams)
-        test_loader = datasets.registry.get(self.training_desc.dataset_hparams, False)
-        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader, save_dense=self.save_dense)
+        # train_loader = datasets.registry.get(self.training_desc.dataset_hparams)
+        # test_loader = datasets.registry.get(self.training_desc.dataset_hparams, False)
+        # callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader, save_dense=self.save_dense)
 
         model = models.registry.get(self.training_desc.model_hparams).to(environment.device())
 
@@ -43,4 +43,9 @@ class TrainingRunner(Runner):
         environment.exists_or_makedirs(output_location)
         self.training_desc.save_hparam(output_location)
 
-        train(model, self.training_desc.training_hparams, train_loader, output_location, callbacks)
+        # train(model, self.training_desc.training_hparams, train_loader, output_location, callbacks)
+
+        standard_train(
+                model, output_location, self.training_desc.dataset_hparams, 
+                self.training_desc.training_hparams,
+                save_dense=self.save_dense)

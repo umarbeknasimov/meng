@@ -64,6 +64,7 @@ class Hparams(abc.ABC):
 
 @dataclass
 class TrainingHparams(Hparams):
+  optimizer_name: str = 'sgd'
   training_steps: str = '160ep'
   lr: float = 0.1
   gamma: float = 0.1
