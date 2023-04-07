@@ -71,16 +71,8 @@ class SplitMergeRunner:
         indent = " " * 2
         for seed in self.children_data_order_seeds:
             print(f'{indent}training child with seed {seed}')
-            if self.desc.strategy == 'decrease_lr':
-                training_hparams = TrainingHparams.create_from_instance_and_dict(
-                    self.desc.training_hparams, 
-                    {
-                        'data_order_seed': seed,
-                        'lr': round(self.desc.training_hparams.lr * (0.95 ** leg_i), 5)
-                    })
-            else:
-                training_hparams = TrainingHparams.create_from_instance_and_dict(
-                    self.desc.training_hparams, {'data_order_seed': seed})
+            training_hparams = TrainingHparams.create_from_instance_and_dict(
+                self.training_hparams(leg_i), {'data_order_seed': seed})
 
             output_location = self.child_location(leg_i, seed)
             if models.registry.state_dicts_exist(self.child_location(leg_i, seed), self.child_train_end_step(leg_i)):
@@ -113,14 +105,7 @@ class SplitMergeRunner:
             print(f'{indent}parent already exists')
             return
         
-        if self.desc.strategy == 'decrease_lr':
-            training_hparams = TrainingHparams.create_from_instance_and_dict(
-                self.desc.training_hparams, 
-                {
-                    'lr': round(self.desc.training_hparams.lr * (0.9 ** leg_i), 5)
-                })
-        else:
-            training_hparams = self.desc.training_hparams
+        training_hparams = self.training_hparams(leg_i)
         
         if leg_i == 0:
             if self.use_init_model:
@@ -178,6 +163,17 @@ class SplitMergeRunner:
             self.desc.dataset_hparams, self.desc.model_hparams, self.desc.training_hparams,
             self.avg_location(leg_i), self.leg_i_location(leg_i), 
             self.children_data_order_seeds, self.child_train_end_step(leg_i))
+    
+    def training_hparams(self, leg_i):
+        if self.desc.strategy == 'decrease_lr':
+            training_hparams = TrainingHparams.create_from_instance_and_dict(
+                self.desc.training_hparams, 
+                {
+                    'lr': round(self.desc.training_hparams.lr / (4 ** leg_i), 8)
+                })
+        else:
+            training_hparams = self.desc.training_hparams
+        return training_hparams
     
     def child_dataset_hparams(self, leg_i):
         if self.desc.strategy == 'subsample':
