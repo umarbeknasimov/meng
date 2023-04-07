@@ -203,7 +203,7 @@ class SplitMergeRunner:
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
-                    'batch_size': int(self.desc.dataset_hparams.batch_size * (2**leg_i))
+                    'batch_size': int(self.desc.dataset_hparams.batch_size * (4**leg_i))
                 })
         else:
             dataset_hparams = self.desc.dataset_hparams
