@@ -43,13 +43,13 @@ def compute_lookahead(spawning_runner: SpawningRunner):
         averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
             model, averaged_weights)
         for data_set, dataloader in {'train': train_data, 'test': test_data}.items():
+            loss_name = f'{data_set}_loss'
+            accuracy_name = f'{data_set}_accuracy'
             if metrics[loss_name][i][j] != 0 and metrics[accuracy_name][i][j] != 0:
                continue
             model = models.registry.get(spawning_runner.desc.model_hparams).to(environment.device())
             model.load_state_dict(averaged_weights_wo_batch_stats)
             interpolate.forward_pass(model, train_data)
-            loss_name = f'{data_set}_loss'
-            accuracy_name = f'{data_set}_accuracy'
             model.eval()
             loss, acc = evaluate.evaluate(model, dataloader)
             metrics[loss_name][i][j] = loss
