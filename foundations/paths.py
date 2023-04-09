@@ -6,6 +6,8 @@ def logger(root): return os.path.join(root, 'logger')
 
 def plane_metrics(root): return os.path.join(root, 'plane_metrics')
 
+def lookahead_metrics(root): return os.path.join(root, 'lookahead_metrics')
+
 def plane_grid(root): return os.path.join(root, 'plane_grid')
 
 def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
