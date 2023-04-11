@@ -8,10 +8,10 @@ from spawning.runner import SpawningRunner
 from utils import interpolate, state_dict, evaluate
 
 
-def compute_lookahead(spawning_runner: SpawningRunner):
+def compute_lookahead(spawning_runner: SpawningRunner, child_data_order_seed: int):
+  assert child_data_order_seed in spawning_runner.children_data_order_seeds
   parent_steps = spawning_runner.desc.spawn_steps(spawning_runner.save_dense)
   children_steps = spawning_runner.desc.spawn_steps(spawning_runner.save_dense)
-  child_seed = spawning_runner.children_data_order_seeds[0]
   parent_location = spawning_runner.train_location()
 
   output_location = spawning_runner.desc.run_path(part='lookahead', experiment=spawning_runner.experiment)
@@ -19,8 +19,8 @@ def compute_lookahead(spawning_runner: SpawningRunner):
 
   metrics_shape = (len(parent_steps), len(children_steps))
 
-  if environment.exists(paths.lookahead_metrics(output_location)):
-    metrics = torch.load(paths.lookahead_metrics(output_location))
+  if environment.exists(paths.lookahead_metrics(output_location, child_data_order_seed)):
+    metrics = torch.load(paths.lookahead_metrics(output_location, child_data_order_seed))
   else:
     metrics = {
       'train_loss': np.zeros(metrics_shape),
@@ -34,7 +34,7 @@ def compute_lookahead(spawning_runner: SpawningRunner):
 
   for i, parent_step in enumerate(parent_steps):
     parent_state_dict = environment.load(paths.model(parent_location, parent_step))
-    child_location = spawning_runner.spawn_step_child_location(parent_step, child_seed)
+    child_location = spawning_runner.spawn_step_child_location(parent_step, child_data_order_seed)
     for j, child_step in enumerate(children_steps):
         child_state_dict = environment.load(paths.model(child_location, child_step))
         weights = [parent_state_dict, child_state_dict]
@@ -55,4 +55,4 @@ def compute_lookahead(spawning_runner: SpawningRunner):
             metrics[loss_name][i][j] = loss
             metrics[accuracy_name][i][j] = acc
             print(f'i = {i:8.2f}, j = {j:8.2f}: acc: {acc:4.2f}, loss: {loss:4.4f}')
-        torch.save(metrics, paths.lookahead_metrics(output_location))
+        torch.save(metrics, paths.lookahead_metrics(output_location, child_data_order_seed))
