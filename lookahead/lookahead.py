@@ -10,8 +10,8 @@ from utils import interpolate, state_dict, evaluate
 
 def compute_lookahead(spawning_runner: SpawningRunner, child_data_order_seed: int):
   assert child_data_order_seed in spawning_runner.children_data_order_seeds
-  parent_steps = spawning_runner.desc.spawn_steps(spawning_runner.save_dense)
-  children_steps = spawning_runner.desc.spawn_steps(spawning_runner.save_dense)
+  parent_steps = spawning_runner.desc.saved_steps
+  children_steps = spawning_runner.desc.saved_steps
   parent_location = spawning_runner.train_location()
 
   output_location = spawning_runner.desc.run_path(part='lookahead', experiment=spawning_runner.experiment)

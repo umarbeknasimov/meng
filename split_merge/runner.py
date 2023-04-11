@@ -87,14 +87,12 @@ class SplitMergeRunner:
                     model, output_location, 
                     self.child_dataset_hparams(leg_i), training_hparams, 
                     pretrain_output_location, self.parent_train_end_step(leg_i), 
-                    pretrain_load_only_model_weights=True,
-                    save_dense=True)
+                    pretrain_load_only_model_weights=True)
             else:
                 train.standard_train(
                     model, output_location, 
                     self.child_dataset_hparams(leg_i), training_hparams, 
-                    pretrain_output_location, self.parent_train_end_step(leg_i), 
-                    save_dense=True)
+                    pretrain_output_location, self.parent_train_end_step(leg_i))
 
     def _train_parent(self, leg_i):
         indent = " " * 1
@@ -117,13 +115,11 @@ class SplitMergeRunner:
                     model, output_location, self.parent_dataset_hparams(0), 
                     training_hparams, init_model_location, 
                     Step.zero(iterations_per_epoch),
-                    pretrain_load_only_model_weights=True,
-                    save_dense=True)
+                    pretrain_load_only_model_weights=True)
             else:
                 train.standard_train(
                     model, output_location, self.parent_dataset_hparams(0), 
-                    training_hparams,
-                    save_dense=True)
+                    training_hparams)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
@@ -132,22 +128,19 @@ class SplitMergeRunner:
                     model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
                     self.child_train_end_step(leg_i - 1),
-                    pretrain_load_only_model_weights=True,
-                    save_dense=True)
+                    pretrain_load_only_model_weights=True)
             elif self.desc.strategy == 'pick_child':
                 print('picking random child')
                 pretrain_output_location = self.child_location(leg_i - 1, self.children_data_order_seeds[0])
                 train.standard_train(
                     model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step(leg_i - 1),
-                    save_dense=True)
+                    self.child_train_end_step(leg_i - 1))
             else:
                 train.standard_train(
                     model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step(leg_i - 1),
-                    save_dense=True)
+                    self.child_train_end_step(leg_i - 1))
 
     def _merge_children(self, leg_i):
         indent = " " * 2

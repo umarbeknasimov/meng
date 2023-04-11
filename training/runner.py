@@ -14,7 +14,6 @@ from training.desc import TrainingDesc
 class TrainingRunner(Runner):
     training_desc: TrainingDesc
     experiment: str = 'main'
-    save_dense: bool = False
     
 
     @staticmethod
@@ -28,14 +27,10 @@ class TrainingRunner(Runner):
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'TrainingRunner':
-        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment, save_dense=args.save_dense)
+        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment)
     
     def run(self):
         print(f'running {self.description()}')
-
-        # train_loader = datasets.registry.get(self.training_desc.dataset_hparams)
-        # test_loader = datasets.registry.get(self.training_desc.dataset_hparams, False)
-        # callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader, save_dense=self.save_dense)
 
         model = models.registry.get(self.training_desc.model_hparams).to(environment.device())
 
@@ -43,9 +38,6 @@ class TrainingRunner(Runner):
         environment.exists_or_makedirs(output_location)
         self.training_desc.save_hparam(output_location)
 
-        # train(model, self.training_desc.training_hparams, train_loader, output_location, callbacks)
-
         standard_train(
                 model, output_location, self.training_desc.dataset_hparams, 
-                self.training_desc.training_hparams,
-                save_dense=self.save_dense)
+                self.training_desc.training_hparams)
