@@ -182,11 +182,11 @@ class SplitMergeRunner:
                 {
                     'subsample_fraction': 1/len(self.children_data_order_seeds)
                 })
-        elif self.desc.strategy == 'continue_increase_batch_size':
+        elif self.desc.strategy == 'increase_batch_size':
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
-                    'batch_size': int(self.desc.dataset_hparams.batch_size * (4**leg_i))
+                    'batch_size': int(self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**leg_i))
                 })
         else:
             dataset_hparams = self.desc.dataset_hparams
@@ -197,13 +197,7 @@ class SplitMergeRunner:
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
-                    'batch_size': self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**2)
-                })
-        elif self.desc.strategy == 'continue_increase_batch_size':
-            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
-                self.desc.dataset_hparams, 
-                {
-                    'batch_size': int(self.desc.dataset_hparams.batch_size * (4**leg_i))
+                    'batch_size': int(self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**leg_i))
                 })
         else:
             dataset_hparams = self.desc.dataset_hparams
