@@ -180,14 +180,14 @@ class TestRunner(test_case.TestCase):
         runner.run()
         for spawn_step in desc.saved_steps:
             parent_w = f'parent_{spawn_step.ep_it_str}'
-            self.assertStateEqual(runner.get_w(parent_w), environment.load(paths.model(runner.train_location(), spawn_step)))
+            self.assertStateEqual(environment.load(runner.get_w(parent_w)), environment.load(paths.model(runner.train_location(), spawn_step)))
             average_spawn_step_path = runner.spawn_step_average_location(spawn_step, children_seeds)
             for child_step in desc.saved_steps:
                 for child_seed in children_seeds:
                     child_w = f'child_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{child_seed}'
-                    self.assertTrue(runner.get_w(child_w), environment.load(paths.model(runner.spawn_step_child_location(spawn_step, child_seed), child_step)))
+                    self.assertTrue(environment.load(runner.get_w(child_w)), environment.load(paths.model(runner.spawn_step_child_location(spawn_step, child_seed), child_step)))
                 avg_w = f'avg_{spawn_step.ep_it_str}_{child_step.ep_it_str}_{",".join([str(i) for i in children_seeds])}'
-                self.assertTrue(runner.get_w(avg_w), environment.load((paths.model(average_spawn_step_path, child_step))))
+                self.assertTrue(environment.load(runner.get_w(avg_w)), environment.load((paths.model(average_spawn_step_path, child_step))))
         
 
         

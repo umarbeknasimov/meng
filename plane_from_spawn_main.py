@@ -25,7 +25,7 @@ def main():
     
     environment.exists_or_makedirs(output_location)
     
-    w_1, w_2, w_3 = spawning_runner.get_w(args.w_1), spawning_runner.get_w(args.w_2), spawning_runner.get_w(args.w_3)
+    w_1, w_2, w_3 = environment.load(spawning_runner.get_w(args.w_1)), environment.load(spawning_runner.get_w(args.w_2)), environment.load(spawning_runner.get_w(args.w_3))
 
     plane.evaluate_plane(w_1, w_2, w_3, output_location, spawning_runner.desc.model_hparams, spawning_runner.desc.dataset_hparams)
 

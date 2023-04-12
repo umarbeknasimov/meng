@@ -162,19 +162,19 @@ class SpawningRunner(Runner):
         w_type = w_name.split('_')[0]
         if w_type == 'parent':
             train_step = Step.from_str(w_name.split('_')[1], iterations_per_epoch)
-            return environment.load(paths.model(self.train_location(), train_step))
+            return paths.model(self.train_location(), train_step)
         elif w_type == 'child':
             params = w_name.split('_')
             spawn_step = Step.from_str(params[1], iterations_per_epoch)
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seed = params[3]
-            return environment.load(paths.model(self.spawn_step_child_location(spawn_step, seed), train_step))
+            return paths.model(self.spawn_step_child_location(spawn_step, seed), train_step)
         elif w_type == 'avg':
             params = w_name.split('_')
             spawn_step = Step.from_str(params[1], iterations_per_epoch)
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seeds = [i for i in params[3].split(',')]
-            return environment.load(paths.model(self.spawn_step_average_location(spawn_step, seeds), train_step))
+            return paths.model(self.spawn_step_average_location(spawn_step, seeds), train_step)
 
 
                 
