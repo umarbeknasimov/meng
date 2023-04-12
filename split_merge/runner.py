@@ -39,7 +39,6 @@ class SplitMergeRunner:
     children_data_order_seeds: list
     num_legs: int = 10
     experiment: str = 'main'
-    use_init_model: bool = False
 
     @staticmethod
     def description():
@@ -55,7 +54,6 @@ class SplitMergeRunner:
     def _add_extra_params(parser: argparse.ArgumentParser):
         parser.add_argument('--children_data_order_seeds', type=int, nargs='+', required=True)
         parser.add_argument('--num_legs', type=int, required=True)
-        parser.add_argument('--use_init_model', action='store_true', default=False)
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'SplitMergeRunner':
@@ -63,8 +61,7 @@ class SplitMergeRunner:
             SplitMergeDesc.create_from_args(args), 
             children_data_order_seeds=args.children_data_order_seeds, 
             num_legs=args.num_legs,
-            experiment=args.experiment,
-            use_init_model=args.use_init_model)
+            experiment=args.experiment)
     
     def _train_children(self, leg_i):
         # train children for s steps
@@ -106,20 +103,9 @@ class SplitMergeRunner:
         training_hparams = self.training_hparams(leg_i)
         
         if leg_i == 0:
-            if self.use_init_model:
-                print('using init model')
-                init_model_location = self.desc.run_path(
-                    part='init_model', experiment=self.experiment)
-                iterations_per_epoch = datasets.registry.get(self.desc.dataset_hparams, train=True).iterations_per_epoch
-                train.standard_train(
-                    model, output_location, self.parent_dataset_hparams(0), 
-                    training_hparams, init_model_location, 
-                    Step.zero(iterations_per_epoch),
-                    pretrain_load_only_model_weights=True)
-            else:
-                train.standard_train(
-                    model, output_location, self.parent_dataset_hparams(0), 
-                    training_hparams)
+            train.standard_train(
+                model, output_location, self.parent_dataset_hparams(0), 
+                training_hparams)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
@@ -129,13 +115,6 @@ class SplitMergeRunner:
                     training_hparams, pretrain_output_location, 
                     self.child_train_end_step(leg_i - 1),
                     pretrain_load_only_model_weights=True)
-            elif self.desc.strategy == 'pick_child':
-                print('picking random child')
-                pretrain_output_location = self.child_location(leg_i - 1, self.children_data_order_seeds[0])
-                train.standard_train(
-                    model, output_location, self.parent_dataset_hparams(leg_i), 
-                    training_hparams, pretrain_output_location, 
-                    self.child_train_end_step(leg_i - 1))
             else:
                 train.standard_train(
                     model, output_location, self.parent_dataset_hparams(leg_i), 
@@ -180,6 +159,12 @@ class SplitMergeRunner:
                 self.desc.dataset_hparams, 
                 {
                     'batch_size': int(self.desc.dataset_hparams.batch_size * (len(self.children_data_order_seeds)**leg_i))
+                })
+        elif self.desc.strategy == 'decrease_child_batch_size':
+            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
+                self.desc.dataset_hparams, 
+                {
+                    'batch_size': int(self.desc.dataset_hparams.batch_size / len(self.children_data_order_seeds))
                 })
         else:
             dataset_hparams = self.desc.dataset_hparams
