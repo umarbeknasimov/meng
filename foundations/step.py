@@ -101,7 +101,10 @@ class Step:
     def get_log_2_steps(end_step: 'Step', iterations_per_epoch):
         return [Step.from_iteration(2**i, iterations_per_epoch) for i in range(int(math.log2(end_step.iteration)) + 1)]
 
+    def get_log_2_steps_equally_spaced_by_0point5(end_step: 'Step'):
+        return [Step.from_iteration(round(2**i), end_step._iterations_per_epoch) for i in np.arange(1, math.log2(end_step.iteration + 1), 0.5)]
+
     def get_log_2_steps_dense(end_step: 'Step'):
-        return [Step.from_iteration(1, end_step._iterations_per_epoch)] + [Step.from_iteration(round(2**i), end_step._iterations_per_epoch) for i in np.arange(1, math.log2(end_step.iteration + 1), 0.5)]
+        return [Step.from_iteration(1, end_step._iterations_per_epoch)] + Step.get_log_2_steps_equally_spaced_by_0point5(end_step)
 
 
