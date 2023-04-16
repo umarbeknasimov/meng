@@ -8,6 +8,8 @@ def plane_metrics(root): return os.path.join(root, 'plane_metrics')
 
 def lookahead_metrics(root, seed): return os.path.join(root, f'lookahead_metrics_{seed}')
 
+def distances_metrics(root): return os.path.join(root, f'distances_metrics')
+
 def plane_grid(root): return os.path.join(root, 'plane_grid')
 
 def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
