@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from foundations.hparams import TrainingHparams
 from foundations.step import Step
+from . import lookahead_optim
 
 def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
     if args.optimizer_name == 'sgd':
@@ -24,6 +25,12 @@ def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
             lr=args.lr,
             weight_decay=args.weight_decay
         )
+
+    elif args.optimizer_name == 'lookahead':
+        optim = torch.optim.SGD(model.parameters(), args.lr,
+                                        momentum=args.momentum,
+                                        weight_decay=args.weight_decay)
+        return lookahead_optim.Lookahead(optim)
     
     raise ValueError(f'no such optimizer {args.optimizer_name}')
 
