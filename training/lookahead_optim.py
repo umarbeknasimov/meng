@@ -4,6 +4,7 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 
+
 class Lookahead(Optimizer):
     r"""PyTorch implementation of the lookahead wrapper.
     Lookahead Optimizer: https://arxiv.org/abs/1907.08610
@@ -87,6 +88,7 @@ class Lookahead(Optimizer):
         self._la_step += 1
 
         if self._la_step >= self._total_la_steps:
+            print(f'averaging with k step {self._total_la_steps}')
             self._la_step = 0
             # Lookahead and cache the current optimizer parameters
             for group in self.optimizer.param_groups:
@@ -103,3 +105,19 @@ class Lookahead(Optimizer):
                         self.optimizer.state[p]["momentum_buffer"] = torch.zeros_like(p.data)
 
         return loss
+
+class LookaheadManualSchedule(Lookahead):
+    def __init__(self, optimizer, initial_k=10, milestones={512: 20, 1024: 40, 2048: 80, 4096: 160}):
+        super(LookaheadManualSchedule, self).__init__(optimizer=optimizer, la_steps=initial_k)
+        self.step_counter = 0
+        self.milestones = milestones
+
+    def step(self, closure=None):
+        self.step_counter += 1
+        if self.step_counter in self.milestones:
+            print(f'setting k to {self.milestones[self.step_counter]} at step {self.step_counter}')
+            # reset lookahead counter & assign new k
+            self._la_step = 0
+            self._total_la_steps = self.milestones[self.step_counter]
+
+        return super(LookaheadManualSchedule, self).step(closure)
