@@ -32,11 +32,18 @@ def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
                                         weight_decay=args.weight_decay)
         return lookahead_optim.Lookahead(optim)
 
-    elif args.optimizer_name == 'lookahead_manual':
+    elif 'lookahead_manual' in args.optimizer_name:
+        milestones = [int(i) for i in args.optimizer_name.split('_')[2].split(',')]
+        assert len(milestones) % 2 == 0
+        milestones_dict = {}
+        for i in range(0, len(milestones), 2):
+            milestones_dict[milestones[i]] = milestones[i+1]
+
+        print(f'milestones dict: {milestones_dict}')
         optim = torch.optim.SGD(model.parameters(), args.lr,
                                         momentum=args.momentum,
                                         weight_decay=args.weight_decay)
-        return lookahead_optim.LookaheadManualSchedule(optim)
+        return lookahead_optim.LookaheadManualSchedule(optim, milestones_dict)
     
     raise ValueError(f'no such optimizer {args.optimizer_name}')
 
