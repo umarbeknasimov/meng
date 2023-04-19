@@ -43,7 +43,7 @@ def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
         optim = torch.optim.SGD(model.parameters(), args.lr,
                                         momentum=args.momentum,
                                         weight_decay=args.weight_decay)
-        return lookahead_optim.LookaheadManualSchedule(optim, milestones_dict)
+        return lookahead_optim.LookaheadManualSchedule(optim, milestones=milestones_dict)
     
     raise ValueError(f'no such optimizer {args.optimizer_name}')
 
