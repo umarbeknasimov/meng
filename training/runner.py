@@ -31,8 +31,9 @@ class TrainingRunner(Runner):
     
     def run(self):
         print(f'running {self.description()}')
-
-        model = models.registry.get(self.training_desc.model_hparams).to(environment.device())
+        
+        outputs = datasets.registry.get(self.training_desc.dataset_hparams).dataset.num_classes()
+        model = models.registry.get(self.training_desc.model_hparams, outputs).to(environment.device())
 
         output_location = self.training_desc.run_path(self.experiment)
         environment.exists_or_makedirs(output_location)

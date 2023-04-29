@@ -49,7 +49,7 @@ class SpawningRunner(Runner):
             return
 
         print('not all spawn steps saved so running train on parent')
-        model = models.registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
         if self.desc.pretrain_dataset_hparams and self.desc.pretrain_training_hparams:
             pretrain_output_location = self.pretrain_location()
             # load model weights from pretrained model
@@ -71,7 +71,7 @@ class SpawningRunner(Runner):
             return
         print('pretrain model doesn\'t exist so running pretrain')
     
-        model = models.registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
         train.standard_train(model, output_location, self.desc.pretrain_dataset_hparams, self.desc.pretrain_training_hparams)
     
     def _spawn_and_train(self, spawn_step, data_order_seed):
@@ -84,7 +84,7 @@ class SpawningRunner(Runner):
             print(f'child already exists')
             return
         print(f'child doesn\'t exist so running train')
-        model = models.registry.get(self.desc.model_hparams).to(environment.device())
+        model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.train_location(), spawn_step)
     
     def _average(self, spawn_step, seeds):
@@ -175,6 +175,10 @@ class SpawningRunner(Runner):
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seeds = [i for i in params[3].split(',')]
             return paths.model(self.spawn_step_average_location(spawn_step, seeds), train_step)
+    
+    @property
+    def model_num_classes(self):
+        return datasets.registry.get(self.desc.dataset_hparams).dataset.num_classes()
 
 
                 

@@ -1,7 +1,7 @@
-from datasets import cifar10
+from datasets import cifar10, cifar100
 from foundations.hparams import DatasetHparams
 
-registered_datasets = {'cifar10': cifar10}
+registered_datasets = {'cifar10': cifar10, 'cifar100': cifar100}
 
 def get(dataset_hparams: DatasetHparams, train: bool = True):
     """get train or test set corresponding to dataset hparams"""

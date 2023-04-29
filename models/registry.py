@@ -22,10 +22,10 @@ def get_model_state_dict(output_location, step):
 def get_optim_state_dict(output_location, step):
     return environment.load(paths.optim(output_location, step))
 
-def get(model_hparams: ModelHparams):
+def get(model_hparams: ModelHparams, outputs=None):
     for registered_model in registered_models:
         if registered_model.is_valid_model_name(model_hparams.model_name):
-            return registered_model.get_model_from_name(model_hparams.model_name)
+            return registered_model.get_model_from_name(model_hparams.model_name, outputs)
     raise ValueError('No such model: {}'.format(model_hparams.model_name))
 
 def get_default_hparams(model_name):

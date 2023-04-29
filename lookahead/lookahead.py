@@ -31,14 +31,14 @@ def compute_lookahead(spawning_runner: SpawningRunner, child_data_order_seed: in
 
   train_data, test_data = datasets.registry.get(spawning_runner.desc.dataset_hparams), datasets.registry.get(spawning_runner.desc.dataset_hparams, False)
 
-
+  num_classes = datasets.registry.get(spawning_runner.desc.dataset_hparams).dataset.num_classes()
   for i, parent_step in enumerate(parent_steps):
     parent_state_dict = environment.load(paths.model(parent_location, parent_step))
     child_location = spawning_runner.spawn_step_child_location(parent_step, child_data_order_seed)
     for j, child_step in enumerate(children_steps):
         child_state_dict = environment.load(paths.model(child_location, child_step))
         weights = [parent_state_dict, child_state_dict]
-        model = models.registry.get(spawning_runner.desc.model_hparams).to(environment.device())
+        model = models.registry.get(spawning_runner.desc.model_hparams, num_classes).to(environment.device())
         averaged_weights = interpolate.average_state_dicts(weights)
         averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
             model, averaged_weights)
@@ -46,8 +46,8 @@ def compute_lookahead(spawning_runner: SpawningRunner, child_data_order_seed: in
             loss_name = f'{data_set}_loss'
             accuracy_name = f'{data_set}_accuracy'
             if metrics[loss_name][i][j] != 0 and metrics[accuracy_name][i][j] != 0:
-               continue
-            model = models.registry.get(spawning_runner.desc.model_hparams).to(environment.device())
+              continue
+            model = models.registry.get(spawning_runner.desc.model_hparams, num_classes).to(environment.device())
             model.load_state_dict(averaged_weights_wo_batch_stats)
             interpolate.forward_pass(model, train_data)
             model.eval()
