@@ -21,7 +21,11 @@ def save_logger(output_location, step, model, optimizer, scheduler, logger):
 
 def create_eval_callback(eval_name: str, loader: DataLoader, verbose=True):
     def eval_callback(output_location, step, model, optimizer, scheduler, logger):
+        is_in_train = model.training
+        model.eval()
         loss, accurary = evaluate(model, loader)
+        if is_in_train:
+            model.train()
 
         logger.add('{}_loss'.format(eval_name), step, loss)
         logger.add('{}_accuracy'.format(eval_name), step, accurary)
