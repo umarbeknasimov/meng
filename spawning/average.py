@@ -16,11 +16,11 @@ def average(
     model_hparams: ModelHparams,
     training_hparams: TrainingHparams,
     output_location: str,
-    models_location: str,
     callbacks: list,
     train_loader: DataLoader,
-    seeds: list,
-    step: Step
+    step: Step,
+    weights,
+    optimizer_weights
     ):
     """average models at some step across multiple seeds"""
     environment.exists_or_makedirs(output_location)
@@ -28,12 +28,7 @@ def average(
         logger = MetricLogger.create_from_file(output_location)
     else:
         logger = MetricLogger()
-    weights = []
-    for data_order_seed in seeds:
-        weights.append(
-            get_model_state_dict(
-                paths.seed(models_location, data_order_seed),
-                step))
+
     model = models.registry.get(model_hparams, train_loader.dataset.num_classes()).to(environment.device())
     averaged_weights = interpolate.average_state_dicts(weights)
     averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
@@ -41,12 +36,6 @@ def average(
     model.load_state_dict(averaged_weights_wo_batch_stats)
     interpolate.forward_pass(model, train_loader)
 
-    optimizer_weights = []
-    for data_order_seed in seeds:
-        optimizer_weights.append(
-            get_optim_state_dict(
-                paths.seed(models_location, data_order_seed),
-                step)['optimizer'])
     averaged_optimizer_weights = interpolate.average_optimizer_state_dicts(optimizer_weights)
     optimizer = optimizers.get_optimizer(model, training_hparams)
     optimizer.load_state_dict(averaged_optimizer_weights)
@@ -64,15 +53,18 @@ def standard_average(
     model_hparams: ModelHparams,
     training_hparams: TrainingHparams,
     output_location: str,
-    models_location: str,
-    seeds: list,
-    step: Step
+    step: Step,
+    weights,
+    optimizer_weights,
+    dont_save_models = False
 ):
     train_loader = datasets.registry.get(dataset_hparams)
     test_loader = datasets.registry.get(dataset_hparams, False)
     test_eval_callback = create_eval_callback('test', test_loader)
     train_eval_callback = create_eval_callback('train', train_loader)
-    callbacks = [save_state_dicts, test_eval_callback, train_eval_callback, save_logger]
+    callbacks = [test_eval_callback, train_eval_callback, save_logger]
+    if not dont_save_models:
+        callbacks = [save_state_dicts] + callbacks
 
-    return average(model_hparams, training_hparams, output_location, models_location, callbacks, train_loader, seeds, step)
+    return average(model_hparams, training_hparams, output_location, callbacks, train_loader, step, weights, optimizer_weights)
 

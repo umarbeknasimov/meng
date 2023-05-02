@@ -26,15 +26,31 @@ def average_optimizer_state_dicts(state_dicts):
   new_state_dict = {}
   new_state_dict['param_groups'] = copy.deepcopy(state_dicts[0]['param_groups'])
   new_state_dict['state'] = {}
-  for i, _ in state_dicts[0]['state'].items():
-    new_state_dict_i = {}
-    for param_name in state_dicts[0]['state'][0]: # checking for param_name, in our case is just 'momentum_buffer'
-      if state_dicts[0]['state'][0][param_name] is not None:
-        stacked_weights = torch.stack([state_dict['state'][i][param_name] for state_dict in state_dicts], dim=0).to(torch.float64)
-        new_state_dict_i[param_name] = torch.mean(stacked_weights, dim=0)
-      else:
-        new_state_dict_i[param_name] = None
-    new_state_dict['state'][i] = new_state_dict_i
+
+  non_none_state_dict = None
+  for state_dict in state_dicts:
+    if len(state_dict['state'].keys()) > 0:
+      non_none_state_dict = state_dict
+      break
+  
+  if non_none_state_dict == None: return new_state_dict
+  
+  for weights_index in non_none_state_dict['state'].keys():
+    optim_param_for_weights_index = {}
+    for optim_param_name, optim_param in non_none_state_dict['state'][weights_index].items():
+      optim_param_for_weights_index[optim_param_name] = torch.zeros(optim_param.size())
+    new_state_dict[weights_index] = optim_param_for_weights_index
+
+  for weights_index in non_none_state_dict['state'].keys():
+    optim_param_for_weights_index = {}
+    for optim_param_name, _ in non_none_state_dict['state'][weights_index].items(): # checking for param_name, in our case is just 'momentum_buffer'
+      stacked_weights = []
+      for state_dict in state_dicts:
+        if weights_index in state_dict['state']:
+          stacked_weights.append(state_dict['state'][weights_index][optim_param_name])
+      
+      optim_param_for_weights_index[optim_param_name] = torch.mean(torch.stack(stacked_weights, dim=0).to(torch.float64), dim=0)
+    new_state_dict['state'][weights_index] = optim_param_for_weights_index
   return new_state_dict
 
 def forward_pass(model, dataloader):

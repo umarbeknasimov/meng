@@ -87,6 +87,60 @@ class SpawningRunner(Runner):
         model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
         train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.train_location(), spawn_step)
     
+    def _avg_across(self, parent_step):
+        print(f'avg across for {parent_step.ep_it_str}')
+        children_steps = self.desc.saved_steps
+        avg_location = self.spawn_step_children_location(parent_step, self.children_data_order_seeds, part='avg_across')
+
+        for child_step in children_steps:
+            if models.registry.model_exists(avg_location, child_step) and is_logger_info_saved(avg_location, child_step):
+                print('not running average')
+                continue
+            children_weights = []
+            children_optimizer_weights = []
+            for seed_i in self.children_data_order_seeds:
+                child_weights = models.registry.get_model_state_dict(
+                    self.spawn_step_child_location(parent_step, seed_i),
+                    child_step)
+                child_optimizer_weights = models.registry.get_optim_state_dict(
+                    self.spawn_step_child_location(parent_step, seed_i),
+                    child_step)['optimizer']
+                children_weights.append(child_weights)
+                children_optimizer_weights.append(child_optimizer_weights)
+            standard_average(self.desc.dataset_hparams,
+                self.desc.model_hparams,
+                self.desc.training_hparams,
+                avg_location,
+                child_step,
+                children_weights,
+                children_optimizer_weights)
+    
+    def _avg_back(self, parent_step):
+        print(f'avg back for {parent_step.ep_it_str}')
+        children_steps = self.desc.saved_steps
+        parent_weights = models.registry.get_model_state_dict(self.train_location(), parent_step)
+        parent_optimizer_weights = models.registry.get_optim_state_dict(self.train_location(), parent_step)['optimizer']
+        for child_step in children_steps:
+            for seed_i in self.children_data_order_seeds:
+                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back')
+                if is_logger_info_saved(avg_location, child_step):
+                    print('not running average')
+                    continue
+                child_weights = models.registry.get_model_state_dict(
+                    self.spawn_step_child_location(parent_step, seed_i),
+                    child_step)
+                child_optimizer_weights = models.registry.get_optim_state_dict(
+                    self.spawn_step_child_location(parent_step, seed_i),
+                    child_step)['optimizer']
+                standard_average(self.desc.dataset_hparams,
+                    self.desc.model_hparams,
+                    self.desc.training_hparams,
+                    avg_location,
+                    child_step,
+                    [child_weights, parent_weights],
+                    [child_optimizer_weights, parent_optimizer_weights],
+                    dont_save_models=True)
+    
     def _average(self, spawn_step, seeds):
         print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
 
@@ -101,9 +155,20 @@ class SpawningRunner(Runner):
                 print('not running average')
                 continue
             print('running average')
+            children_weights = []
+            children_optimizer_weights = []
+            for seed_i in self.children_data_order_seeds:
+                child_weights = models.registry.get_model_state_dict(
+                    self.spawn_step_child_location(spawn_step, seed_i), child_step)
+                child_optimizer_weights = models.registry.get_optim_state_dict(
+                    self.spawn_step_child_location(spawn_step, seed_i),
+                    child_step)['optimizer']
+            children_weights.append(child_weights)
+            children_optimizer_weights.append(child_optimizer_weights)
             standard_average(
                 self.desc.dataset_hparams, self.desc.model_hparams, 
-                self.desc.training_hparams, output_location, spawn_step_location, seeds, child_step)
+                self.desc.training_hparams, output_location, child_step, 
+                children_weights, children_optimizer_weights)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
@@ -128,6 +193,8 @@ class SpawningRunner(Runner):
             spawn_step = self.desc.saved_steps[spawn_step_i]
             for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
+            self._avg_across(spawn_step)
+            self._avg_back(spawn_step)
             if len(self.children_data_order_seeds) > 1:
                 self._average(spawn_step, self.children_data_order_seeds)
 
@@ -137,14 +204,17 @@ class SpawningRunner(Runner):
     def pretrain_location(self):
         return self.desc.run_path(part='pretrain', experiment=self.experiment)
     
-    def spawn_step_location(self, spawn_step):
-        return paths.spawn_step(self.desc.run_path(part='children', experiment=self.experiment), spawn_step)
+    def spawn_step_location(self, spawn_step, part='children'):
+        return paths.step_(self.desc.run_path(part=part, experiment=self.experiment), spawn_step)
     
     def spawn_step_average_location(self, spawn_step, seeds):
         return paths.average(self.spawn_step_location(spawn_step), seeds)
     
-    def spawn_step_child_location(self, spawn_step, data_order_seed):
-        return paths.seed(self.spawn_step_location(spawn_step), data_order_seed)
+    def spawn_step_child_location(self, spawn_step, data_order_seed, part='children'):
+        return paths.seed(self.spawn_step_location(spawn_step, part), data_order_seed)
+    
+    def spawn_step_children_location(self, spawn_step, seeds, part):
+        return paths.seeds(self.spawn_step_location(spawn_step, part), seeds)
     
     def get_w(self, w_name: str):
         """
@@ -169,12 +239,6 @@ class SpawningRunner(Runner):
             train_step = Step.from_str(params[2], iterations_per_epoch)
             seed = params[3]
             return paths.model(self.spawn_step_child_location(spawn_step, seed), train_step)
-        elif w_type == 'avg':
-            params = w_name.split('_')
-            spawn_step = Step.from_str(params[1], iterations_per_epoch)
-            train_step = Step.from_str(params[2], iterations_per_epoch)
-            seeds = [i for i in params[3].split(',')]
-            return paths.model(self.spawn_step_average_location(spawn_step, seeds), train_step)
     
     @property
     def model_num_classes(self):

@@ -22,9 +22,12 @@ def model(root, step): return os.path.join(root, f'model{_step(step)}.pth')
 
 def train(root): return os.path.join(root, 'train')
 
-def spawn_step(root, step): return os.path.join(root, _step(step))
+def step_(root, step): return os.path.join(root, _step(step))
 
 def seed(root, seed): return os.path.join(root, f'seed{seed}')
+
+def seeds(root, seeds): 
+    return os.path.join(root, f'seeds{",".join([str(seed) for seed in seeds])}')
 
 def legs(root): return os.path.join(root, 'legs')
 
