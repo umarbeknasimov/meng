@@ -4,13 +4,12 @@ from environment import environment
 from foundations import paths
 from foundations.hparams import DatasetHparams, ModelHparams, TrainingHparams
 from foundations.step import Step
-from foundations.callbacks import create_eval_callback, save_logger, save_model
+from foundations.callbacks import create_eval_callback, save_logger
 import models.registry
 from training import optimizers
 from training.callbacks import save_state_dicts
 from training.metric_logger import MetricLogger
 from utils import state_dict, interpolate
-from models.registry import get_model_state_dict, get_optim_state_dict
 
 def average(
     model_hparams: ModelHparams,

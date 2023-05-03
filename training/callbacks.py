@@ -68,10 +68,9 @@ def standard_callbacks(
     args: TrainingHparams,
     train_set_loader: DataLoader, 
     test_set_loader: DataLoader, 
-    eval_on_train: bool = True,
     verbose: bool = True, 
     start_step: Step = None,
-    evaluate_every_epoch: bool = True):
+    evaluate_every_step: bool = False):
     
     start = start_step or Step.zero(train_set_loader.iterations_per_epoch)
     print('training steps ', args.training_steps)
@@ -88,9 +87,10 @@ def standard_callbacks(
         run_every_epoch(checkpointing.save_checkpoint_callback)
     ]
 
-    if evaluate_every_epoch: result = result + [run_every_epoch(test_eval_callback)]
-    if eval_on_train:
-        if evaluate_every_epoch: result = result + [run_every_epoch(train_eval_callback)]
+    if evaluate_every_step: result = result + [run_every_step(save_state_dicts)]
+
+    result = result + [run_every_epoch(test_eval_callback), run_every_epoch(train_eval_callback)]
+    if evaluate_every_step: result = result + [run_every_step(train_eval_callback), run_every_step(test_eval_callback)]
     
     result = result + [
         run_at_log_base_2_steps_dense(train_eval_callback, end),
