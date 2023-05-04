@@ -40,11 +40,6 @@ class TrainingRunner(Runner):
         environment.exists_or_makedirs(output_location)
         self.training_desc.save_hparam(output_location)
 
-        train_loader = datasets.registry.get(self.training_desc.dataset_hparams, train=True)
-        test_loader = datasets.registry.get(self.training_desc.dataset_hparams, train=False)
-        callbacks = standard_callbacks(self.training_desc.training_hparams, train_loader, test_loader, evaluate_every_step=True)
-        train.train(model, self.training_desc.training_hparams, train_loader, output_location, callbacks)
-
-        # standard_train(
-        #         model, output_location, self.training_desc.dataset_hparams, 
-        #         self.training_desc.training_hparams)
+        standard_train(
+                model, output_location, self.training_desc.dataset_hparams, 
+                self.training_desc.training_hparams)

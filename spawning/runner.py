@@ -140,35 +140,6 @@ class SpawningRunner(Runner):
                     [child_weights, parent_weights],
                     [child_optimizer_weights, parent_optimizer_weights],
                     dont_save_models=True)
-    
-    def _average(self, spawn_step, seeds):
-        print(f'averaging children for seeds {seeds} at spawn step {spawn_step.ep_it_str}')
-
-        output_location = self.spawn_step_average_location(spawn_step, seeds)
-        environment.exists_or_makedirs(output_location)
-        spawn_step_location = self.spawn_step_location(spawn_step)
-        environment.exists_or_makedirs(spawn_step_location)
-
-        for child_step in self.desc.saved_steps:
-            print(f'child step {child_step.ep_it_str}')
-            if models.registry.model_exists(output_location, child_step) and is_logger_info_saved(output_location, child_step):
-                print('not running average')
-                continue
-            print('running average')
-            children_weights = []
-            children_optimizer_weights = []
-            for seed_i in self.children_data_order_seeds:
-                child_weights = models.registry.get_model_state_dict(
-                    self.spawn_step_child_location(spawn_step, seed_i), child_step)
-                child_optimizer_weights = models.registry.get_optim_state_dict(
-                    self.spawn_step_child_location(spawn_step, seed_i),
-                    child_step)['optimizer']
-            children_weights.append(child_weights)
-            children_optimizer_weights.append(child_optimizer_weights)
-            standard_average(
-                self.desc.dataset_hparams, self.desc.model_hparams, 
-                self.desc.training_hparams, output_location, child_step, 
-                children_weights, children_optimizer_weights)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
@@ -195,8 +166,6 @@ class SpawningRunner(Runner):
                 self._spawn_and_train(spawn_step, data_order_seed)
             self._avg_across(spawn_step)
             self._avg_back(spawn_step)
-            if len(self.children_data_order_seeds) > 1:
-                self._average(spawn_step, self.children_data_order_seeds)
 
     def train_location(self):
         return self.desc.run_path(part='parent', experiment=self.experiment)
@@ -206,9 +175,6 @@ class SpawningRunner(Runner):
     
     def spawn_step_location(self, spawn_step, part='children'):
         return paths.step_(self.desc.run_path(part=part, experiment=self.experiment), spawn_step)
-    
-    def spawn_step_average_location(self, spawn_step, seeds):
-        return paths.average(self.spawn_step_location(spawn_step), seeds)
     
     def spawn_step_child_location(self, spawn_step, data_order_seed, part='children'):
         return paths.seed(self.spawn_step_location(spawn_step, part), data_order_seed)
@@ -223,7 +189,6 @@ class SpawningRunner(Runner):
         w_name should be:
             parent_{train_step} for parent
             child_{spawn_step}_{train_step}_{seed}
-            avg_{spawn_step}_{train_step}_{seeds}
 
             where step is in ep_it_str format
             seeds is comma separated
