@@ -125,16 +125,41 @@ class SplitMergeRunner:
         indent = " " * 2
         print(f'{indent}running average')
         # merge & save model state, optim state
+        # output_location = self.avg_location(leg_i)
+        # environment.exists_or_makedirs(output_location)
+        # if models.registry.model_exists(output_location, self.child_train_end_step(leg_i)) and is_logger_info_saved(output_location, self.child_train_end_step(leg_i)):
+        #     print(f'{indent}average already exists')
+        #     return
+
+        # standard_average(
+        #     self.desc.dataset_hparams, self.desc.model_hparams, self.desc.training_hparams,
+        #     self.avg_location(leg_i), self.leg_i_location(leg_i), 
+        #     self.children_data_order_seeds, self.child_train_end_step(leg_i))
+
         output_location = self.avg_location(leg_i)
-        environment.exists_or_makedirs(output_location)
+        step = self.child_train_end_step(leg_i)
+
         if models.registry.model_exists(output_location, self.child_train_end_step(leg_i)) and is_logger_info_saved(output_location, self.child_train_end_step(leg_i)):
             print(f'{indent}average already exists')
             return
-
-        standard_average(
-            self.desc.dataset_hparams, self.desc.model_hparams, self.desc.training_hparams,
-            self.avg_location(leg_i), self.leg_i_location(leg_i), 
-            self.children_data_order_seeds, self.child_train_end_step(leg_i))
+        children_weights = []
+        children_optimizer_weights = []
+        for seed_i in self.children_data_order_seeds:
+            child_weights = models.registry.get_model_state_dict(
+                paths.seed(self.leg_i_location(leg_i), seed_i),
+                step)
+            child_optimizer_weights = models.registry.get_optim_state_dict(
+                paths.seed(self.leg_i_location(leg_i), seed_i),
+                step)['optimizer']
+            children_weights.append(child_weights)
+            children_optimizer_weights.append(child_optimizer_weights)
+        standard_average(self.desc.dataset_hparams,
+            self.desc.model_hparams,
+            self.desc.training_hparams,
+            output_location,
+            step,
+            children_weights,
+            children_optimizer_weights)
     
     def training_hparams(self, leg_i):
         if self.desc.strategy == 'decrease_lr':

@@ -84,9 +84,9 @@ class TestSplitMerge(test_case.TestCase):
                 )
 
                 self.assertStateEqual(parent_model_state_dict, avg_model_state_dict)
-                print(parent_optim_state_dict.keys())
-                print(avg_optim_state_dict.keys())
-                self.assertOptimizerEqual(parent_optim_state_dict, avg_optim_state_dict)
+                # print(parent_optim_state_dict.keys())
+                # print(avg_optim_state_dict.keys())
+                self.assertOptimizerEqual(parent_optim_state_dict, avg_optim_state_dict, are_dicts=True)
                 
 
 

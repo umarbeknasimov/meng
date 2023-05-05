@@ -42,9 +42,13 @@ class TestCase(unittest.TestCase):
                 continue
             self.assertFalse(np.array_equal(state1[k], state2[k]), f'key {k}')
     
-    def assertOptimizerEqual(self, optimizer1, optimizer2):
-        optim1_state = optimizer1.state_dict()
-        optim2_state = optimizer2.state_dict()
+    def assertOptimizerEqual(self, optimizer1, optimizer2, are_dicts=False):
+        if are_dicts:
+            optim1_state = optimizer1
+            optim2_state = optimizer2
+        else:
+            optim1_state = optimizer1.state_dict()
+            optim2_state = optimizer2.state_dict()
         # print(optim1_state)
         if len(optim1_state['state'].keys()) == 0: return
         for param_key in optim1_state['state'].keys(): # checking for param_name, in our case is just 'momentum_buffer'
