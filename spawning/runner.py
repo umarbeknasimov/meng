@@ -140,6 +140,34 @@ class SpawningRunner(Runner):
                     [child_weights, parent_weights],
                     [child_optimizer_weights, parent_optimizer_weights],
                     dont_save_models=True)
+        
+    def _avg_back_all(self, parent_step):
+        print(f'avg back all for {parent_step.ep_it_str}')
+        children_steps = self.desc.saved_steps
+        for index, child_step in enumerate(children_steps):
+            for seed_i in self.children_data_order_seeds:
+                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_all')
+                if is_logger_info_saved(avg_location, child_step):
+                    print('not running average')
+                    continue
+                all_weights, all_optim_weights = [], []
+                for prev_child_step in children_steps[:index + 1]:
+                    child_weights = models.registry.get_model_state_dict(
+                        self.spawn_step_child_location(parent_step, seed_i),
+                        prev_child_step)
+                    child_optimizer_weights = models.registry.get_optim_state_dict(
+                        self.spawn_step_child_location(parent_step, seed_i),
+                        prev_child_step)['optimizer']
+                    all_weights.append(child_weights)
+                    all_optim_weights.append(child_optimizer_weights)
+                standard_average(self.desc.dataset_hparams,
+                    self.desc.model_hparams,
+                    self.desc.training_hparams,
+                    avg_location,
+                    child_step,
+                    all_weights,
+                    all_optim_weights,
+                    dont_save_models=True)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
@@ -166,6 +194,7 @@ class SpawningRunner(Runner):
                 self._spawn_and_train(spawn_step, data_order_seed)
             self._avg_across(spawn_step)
             self._avg_back(spawn_step)
+            self._avg_back_all(spawn_step)
 
     def train_location(self):
         return self.desc.run_path(part='parent', experiment=self.experiment)
