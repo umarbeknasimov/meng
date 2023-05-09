@@ -26,3 +26,6 @@ def get(dataset_hparams: DatasetHparams, train: bool = True):
 
     #loader
     return registered_datasets[dataset_hparams.dataset_name].Dataloader(dataset, dataset_hparams.batch_size)
+
+def get_iterations_per_epoch(dataset_hparams: DatasetHparams):
+    return get(dataset_hparams).iterations_per_epoch
