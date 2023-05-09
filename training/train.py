@@ -82,7 +82,7 @@ def standard_train(
   pretrain_load_only_model_weights: bool = False,
   start_step: Step = None,
   verbose: bool = True,
-  evaluate_every_epoch: bool = True,
+  end_step: Step = None,
 ):
     """Train using the standard callbacks according to the provided hparams."""
 
@@ -95,4 +95,4 @@ def standard_train(
     callbacks = standard_callbacks(
         training_hparams, train_loader, test_loader, start_step=start_step,
         verbose=verbose)
-    train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, pretrain_load_only_model_weights, start_step=start_step)
+    train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, pretrain_load_only_model_weights, start_step=start_step, end_step=end_step)
