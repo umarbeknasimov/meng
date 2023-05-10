@@ -182,9 +182,9 @@ class SpawningRunner(Runner):
                 all_weights, all_optim_weights = [], []
                 steps = [children_steps[0], child_step]
                 if index == 2:
-                    steps += children_steps[index - 1]
+                    steps = steps + [children_steps[index - 1]]
                 elif index > 2:
-                    steps += children_steps[index - 2]
+                    steps = steps + [children_steps[index - 2]]
                 for prev_child_step in steps:
                     child_weights = models.registry.get_model_state_dict(
                         self.spawn_step_child_location(parent_step, seed_i),
