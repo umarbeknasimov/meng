@@ -180,7 +180,7 @@ class SpawningRunner(Runner):
                     print('not running average')
                     continue
                 all_weights, all_optim_weights = [], []
-                for prev_child_step in [children_steps[0], Step.from_iteration(int(child_step.iteration // 2), iterations_per_epoch), child_step]:
+                for prev_child_step in [children_steps[0], Step.from_iteration(round(child_step.iteration // 2), iterations_per_epoch), child_step]:
                     child_weights = models.registry.get_model_state_dict(
                         self.spawn_step_child_location(parent_step, seed_i),
                         prev_child_step)
