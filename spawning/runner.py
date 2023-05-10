@@ -223,8 +223,8 @@ class SpawningRunner(Runner):
                 self._spawn_and_train(spawn_step, data_order_seed)
             self._avg_across(spawn_step)
             self._avg_back(spawn_step)
-            self._avg_back_all(spawn_step)
             self._avg_back_plus_one(spawn_step)
+            self._avg_back_all(spawn_step)
 
     def train_location(self):
         return self.desc.run_path(part='parent', experiment=self.experiment)
