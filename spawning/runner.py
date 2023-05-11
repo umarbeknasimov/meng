@@ -204,7 +204,7 @@ class SpawningRunner(Runner):
                     dont_save_models=True)
     
     def _avg_back_plus_three(self, parent_step):
-        print(f'avg back plus one for {parent_step.ep_it_str}')
+        print(f'avg back three one for {parent_step.ep_it_str}')
         iterations_per_epoch = datasets.registry.get_iterations_per_epoch(self.desc.dataset_hparams)
         children_steps = self.desc.saved_steps
         for index, child_step in enumerate(children_steps):

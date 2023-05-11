@@ -31,6 +31,12 @@ def get_optimizer(model: nn.Module, args: TrainingHparams) -> Optimizer:
                                         momentum=args.momentum,
                                         weight_decay=args.weight_decay)
         return lookahead_optim.Lookahead(optim)
+    
+    elif args.optimizer_name == 'lookahead2':
+        optim = torch.optim.SGD(model.parameters(), args.lr,
+                                        momentum=args.momentum,
+                                        weight_decay=args.weight_decay)
+        return lookahead_optim.Lookahead2(optim)
 
     elif 'lookahead_manual' in args.optimizer_name:
         milestones = [int(i) for i in args.optimizer_name.split('_')[2].split(',')]
