@@ -112,6 +112,8 @@ class LookaheadRunner:
             print(f'{indent}average already exists')
             return
 
+        all_steps = Step.get_log_2_steps_equally_spaced_by_0point5(end_step)
+
         start_step = Step.zero(datasets.registry.get_iterations_per_epoch(self.desc.dataset_hparams))
         start_weights = start_weights = models.registry.get_model_state_dict(
             self.leg_i_location(leg_i),
@@ -119,14 +121,23 @@ class LookaheadRunner:
         end_weights = models.registry.get_model_state_dict(
             self.leg_i_location(leg_i),
             end_step)
-        start_optim = models.registry.get_optim_state_dict(
+        
+        other_weights = [
+            models.registry.get_model_state_dict(
             self.leg_i_location(leg_i),
-            start_step)['optimizer']
+                all_steps[-3]),
+            models.registry.get_model_state_dict(
+            self.leg_i_location(leg_i),
+                all_steps[-5])
+        ]
+        
+        # keep optim
         end_optim = models.registry.get_optim_state_dict(
             self.leg_i_location(leg_i),
             end_step)['optimizer']
-        weights = [start_weights, end_weights]
-        optims = [start_optim, end_optim]
+
+        weights = [start_weights, end_weights] + other_weights
+        optims = [end_optim]
         standard_average(self.desc.dataset_hparams,
             self.desc.model_hparams,
             self.desc.training_hparams,
