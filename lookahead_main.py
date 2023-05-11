@@ -1,18 +1,11 @@
-'''
-script for computing the loss between parent and 1 child (similar to lookahead)
-'''
 import argparse
-from lookahead import lookahead
-from spawning.runner import SpawningRunner
+from split_merge.lookahead_runner import LookaheadRunner
 
 def main():
     parser = argparse.ArgumentParser(conflict_handler='resolve')
-    SpawningRunner.add_args(parser)
-    parser.add_argument('--child_data_order_seed', type=int, required=True)
+    LookaheadRunner.add_args(parser)
     args = parser.parse_args()
-    spawning_runner = SpawningRunner.create_from_args(args)
-
-    lookahead.compute_lookahead(spawning_runner, args.child_data_order_seed)
+    LookaheadRunner.create_from_args(args).run()
 
 if __name__ == "__main__":
     main()
