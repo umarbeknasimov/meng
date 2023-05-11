@@ -202,6 +202,46 @@ class SpawningRunner(Runner):
                     all_weights,
                     all_optim_weights,
                     dont_save_models=True)
+    
+    def _avg_back_plus_three(self, parent_step):
+        print(f'avg back plus one for {parent_step.ep_it_str}')
+        iterations_per_epoch = datasets.registry.get_iterations_per_epoch(self.desc.dataset_hparams)
+        children_steps = self.desc.saved_steps
+        for index, child_step in enumerate(children_steps):
+            for seed_i in self.children_data_order_seeds:
+                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_plus_one')
+                if is_logger_info_saved(avg_location, child_step):
+                    print('not running average')
+                    continue
+                all_weights, all_optim_weights = [], []
+                steps = [children_steps[0], child_step]
+                if index == 2:
+                    steps = steps + [children_steps[index - 1]]
+                elif index == 3:
+                    steps = steps + [children_steps[index - 1], children_steps[index - 2]]
+                elif index == 4:
+                    steps = steps + [children_steps[index - 1], children_steps[index - 2], children_steps[index - 3]]
+                elif index > 3:
+                    steps = steps + [children_steps[index - 1], children_steps[index - 2], children_steps[index - 4]]
+                
+                for prev_child_step in steps:
+                    child_weights = models.registry.get_model_state_dict(
+                        self.spawn_step_child_location(parent_step, seed_i),
+                        prev_child_step)
+                    child_optimizer_weights = models.registry.get_optim_state_dict(
+                        self.spawn_step_child_location(parent_step, seed_i),
+                        prev_child_step)['optimizer']
+                    all_weights.append(child_weights)
+                    all_optim_weights.append(child_optimizer_weights)
+                
+                standard_average(self.desc.dataset_hparams,
+                    self.desc.model_hparams,
+                    self.desc.training_hparams,
+                    avg_location,
+                    child_step,
+                    all_weights,
+                    all_optim_weights,
+                    dont_save_models=True)
                 
     def run(self, spawn_step_index: int = None):
         print(f'running {self.description()}')
@@ -229,7 +269,8 @@ class SpawningRunner(Runner):
             self._avg_across(spawn_step)
             self._avg_back(spawn_step)
             self._avg_back_plus_one(spawn_step)
-            self._avg_back_all(spawn_step)
+            self._avg_back_plus_three(spawn_step)
+            # self._avg_back_all(spawn_step)
 
     def train_location(self):
         return self.desc.run_path(part='parent', experiment=self.experiment)
