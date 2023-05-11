@@ -194,14 +194,7 @@ class Lookahead2(Optimizer):
             for group in self.optimizer.param_groups:
                 for p in group['params']:
                     param_state = self.state[p]
-                    param_state['cached_params'].mul_(self.la_alpha).add_(param_state['cached_params'], alpha=1.0 - self.la_alpha)  # crucial line
-                    # if self.pullback_momentum == "pullback":
-                    #     internal_momentum = self.optimizer.state[p]["momentum_buffer"]
-                    #     self.optimizer.state[p]["momentum_buffer"] = internal_momentum.mul_(self.la_alpha).add_(
-                    #         1.0 - self.la_alpha, param_state["cached_mom"])
-                    #     param_state["cached_mom"] = self.optimizer.state[p]["momentum_buffer"]
-                    # elif self.pullback_momentum == "reset":
-                    #     self.optimizer.state[p]["momentum_buffer"] = torch.zeros_like(p.data)
+                    param_state['cached_params'].mul_(1.0 - self.la_alpha).add_(p.data, alpha=self.la_alpha)
 
         if self._la_step >= self._total_la_steps:
             print(f'averaging with k step {self._total_la_steps}')
