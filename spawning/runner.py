@@ -209,7 +209,7 @@ class SpawningRunner(Runner):
         children_steps = self.desc.saved_steps
         for index, child_step in enumerate(children_steps):
             for seed_i in self.children_data_order_seeds:
-                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_plus_one')
+                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_plus_three')
                 if is_logger_info_saved(avg_location, child_step):
                     print('not running average')
                     continue
