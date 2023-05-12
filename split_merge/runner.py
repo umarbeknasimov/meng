@@ -84,12 +84,12 @@ class SplitMergeRunner:
                     model, output_location, 
                     self.child_dataset_hparams(leg_i), training_hparams, 
                     pretrain_output_location, self.parent_train_end_step(leg_i), 
-                    pretrain_load_only_model_weights=True)
+                    pretrain_load_only_model_weights=True, evaluate_every_10=True)
             else:
                 train.standard_train(
                     model, output_location, 
                     self.child_dataset_hparams(leg_i), training_hparams, 
-                    pretrain_output_location, self.parent_train_end_step(leg_i))
+                    pretrain_output_location, self.parent_train_end_step(leg_i), evaluate_every_10=True)
 
     def _train_parent(self, leg_i):
         indent = " " * 1
@@ -114,12 +114,12 @@ class SplitMergeRunner:
                     model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
                     self.child_train_end_step(leg_i - 1),
-                    pretrain_load_only_model_weights=True)
+                    pretrain_load_only_model_weights=True, evaluate_every_10=True)
             else:
                 train.standard_train(
                     model, output_location, self.parent_dataset_hparams(leg_i), 
                     training_hparams, pretrain_output_location, 
-                    self.child_train_end_step(leg_i - 1))
+                    self.child_train_end_step(leg_i - 1), evaluate_every_10=True)
 
     def _merge_children(self, leg_i):
         indent = " " * 2

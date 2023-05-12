@@ -83,7 +83,7 @@ def standard_train(
   start_step: Step = None,
   verbose: bool = True,
   end_step: Step = None,
-  evaluate_every_10: bool = True
+  evaluate_every_10: bool = False
 ):
     """Train using the standard callbacks according to the provided hparams."""
 
