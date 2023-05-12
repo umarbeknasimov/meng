@@ -83,6 +83,7 @@ def standard_train(
   start_step: Step = None,
   verbose: bool = True,
   end_step: Step = None,
+  evaluate_every_10: bool = True
 ):
     """Train using the standard callbacks according to the provided hparams."""
 
@@ -94,5 +95,5 @@ def standard_train(
     test_loader = datasets.registry.get(dataset_hparams, train=False)
     callbacks = standard_callbacks(
         training_hparams, train_loader, test_loader, start_step=start_step,
-        verbose=verbose)
+        evaluate_every_step=evaluate_every_10)
     train(model, training_hparams, train_loader, output_location, callbacks, pretrained_output_location, pretrained_step, pretrain_load_only_model_weights, start_step=start_step, end_step=end_step)
