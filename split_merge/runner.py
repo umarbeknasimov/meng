@@ -105,7 +105,7 @@ class SplitMergeRunner:
         if leg_i == 0:
             train.standard_train(
                 model, output_location, self.parent_dataset_hparams(0), 
-                training_hparams)
+                training_hparams, evaluate_every_10=True)
         else:
             pretrain_output_location = self.avg_location(leg_i - 1)
             if self.desc.strategy == 'restart_optimizer':
