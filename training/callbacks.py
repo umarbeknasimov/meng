@@ -50,6 +50,13 @@ def run_at_log_base_2_steps(callback):
         callback(output_location, step, model, optimizer, scheduler, logger)
     return modified_callback
 
+def run_at_every_x_steps(callback, x):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+        if step.iteration % x != 0:
+            return
+        callback(output_location, step, model, optimizer, scheduler, logger)
+    return modified_callback
+
 def run_at_log_base_2_steps_dense(callback, end_step: Step):
     # - Regular: 0, 1, 2, 4, 8, 16, 32, 64, ...
     # - Dense: 0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, ...
@@ -87,10 +94,8 @@ def standard_callbacks(
         run_every_epoch(checkpointing.save_checkpoint_callback)
     ]
 
-    if evaluate_every_step: result = result + [run_every_step(save_state_dicts)]
-
     result = result + [run_every_epoch(test_eval_callback), run_every_epoch(train_eval_callback)]
-    if evaluate_every_step: result = result + [run_every_step(train_eval_callback), run_every_step(test_eval_callback)]
+    if evaluate_every_step: result = result + [run_at_every_x_steps(train_eval_callback, 10), run_at_every_x_steps(test_eval_callback, 10)]
     
     result = result + [
         run_at_log_base_2_steps_dense(train_eval_callback, end),
