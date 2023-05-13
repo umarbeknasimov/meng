@@ -267,8 +267,8 @@ class SpawningRunner(Runner):
             for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
             self._avg_across(spawn_step)
-            self._avg_back(spawn_step)
-            self._avg_back_plus_one(spawn_step)
+            # self._avg_back(spawn_step)
+            # self._avg_back_plus_one(spawn_step)
             self._avg_back_plus_three(spawn_step)
             # self._avg_back_all(spawn_step)
 
