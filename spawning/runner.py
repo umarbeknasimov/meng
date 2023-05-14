@@ -18,6 +18,7 @@ class SpawningRunner(Runner):
     desc: SpawningDesc
     children_data_order_seeds: list
     experiment: str = 'main'
+    ema: bool = False
 
     @staticmethod
     def description():
@@ -26,6 +27,7 @@ class SpawningRunner(Runner):
     @staticmethod
     def add_args(parser: argparse.ArgumentParser) -> None:
         shared_args.JobArgs.add_args(parser)
+        parser.add_argument('--ema',  action='store_true')
         SpawningRunner._add_children_data_order_seeds_argument(parser)
         SpawningDesc.add_args(parser, shared_args.maybe_get_default_hparams())
     
@@ -38,7 +40,8 @@ class SpawningRunner(Runner):
         return SpawningRunner(
             SpawningDesc.create_from_args(args), 
             children_data_order_seeds=args.children_data_order_seeds, 
-            experiment=args.experiment)
+            experiment=args.experiment,
+            ema=args.ema)
     
     def _train(self):
         location = self.train_location()
@@ -78,6 +81,20 @@ class SpawningRunner(Runner):
         training_hparams = TrainingHparams.create_from_instance_and_dict(
             self.desc.training_hparams, {'data_order_seed': data_order_seed})
         output_location = self.spawn_step_child_location(spawn_step, data_order_seed)
+        environment.exists_or_makedirs(output_location)
+        print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
+        if models.registry.state_dicts_exist(output_location, self.desc.train_end_step):
+            print(f'child already exists')
+            return
+        print(f'child doesn\'t exist so running train')
+        model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
+        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.train_location(), spawn_step)
+    
+    def _spawn_and_train_ema(self, spawn_step, data_order_seed):
+        print('ema')
+        training_hparams = TrainingHparams.create_from_instance_and_dict(
+            self.desc.training_hparams, {'data_order_seed': data_order_seed, 'optimizer_name': 'lookahead'})
+        output_location = self.spawn_step_child_location(spawn_step, data_order_seed, part='ema')
         environment.exists_or_makedirs(output_location)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
         if models.registry.state_dicts_exist(output_location, self.desc.train_end_step):
@@ -270,6 +287,8 @@ class SpawningRunner(Runner):
             # self._avg_back(spawn_step)
             # self._avg_back_plus_one(spawn_step)
             self._avg_back_plus_three(spawn_step)
+            if self.ema:
+               self._spawn_and_train_ema(spawn_step, self.children_data_order_seeds[0])
             # self._avg_back_all(spawn_step)
 
     def train_location(self):
@@ -318,4 +337,3 @@ class SpawningRunner(Runner):
                 
 
         
-

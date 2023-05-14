@@ -43,4 +43,4 @@ class TrainingRunner(Runner):
 
         standard_train(
                 model, output_location, self.training_desc.dataset_hparams, 
-                self.training_desc.training_hparams, evaluate_every_10=True)
+                self.training_desc.training_hparams)
