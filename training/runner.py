@@ -16,6 +16,7 @@ class TrainingRunner(Runner):
     training_desc: TrainingDesc
     save_dense: bool = False
     experiment: str = 'main'
+    eval_every_10: bool = False
     
 
     @staticmethod
@@ -25,11 +26,12 @@ class TrainingRunner(Runner):
     @staticmethod
     def add_args(parser: argparse.ArgumentParser) -> None:
         shared_args.JobArgs.add_args(parser)
+        parser.add_argument('--eval_every_10', action='store_true')
         TrainingDesc.add_args(parser, shared_args.maybe_get_default_hparams())
     
     @staticmethod
     def create_from_args(args: argparse.Namespace) -> 'TrainingRunner':
-        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment)
+        return TrainingRunner(TrainingDesc.create_from_args(args), experiment=args.experiment, eval_every_10=args.eval_every_10)
     
     def run(self):
         print(f'running {self.description()}')
@@ -43,4 +45,4 @@ class TrainingRunner(Runner):
 
         standard_train(
                 model, output_location, self.training_desc.dataset_hparams, 
-                self.training_desc.training_hparams)
+                self.training_desc.training_hparams, evaluate_every_10=self.eval_every_10)
