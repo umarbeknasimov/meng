@@ -30,10 +30,14 @@ def average(
 
     model = models.registry.get(model_hparams, train_loader.dataset.num_classes()).to(environment.device())
     averaged_weights = interpolate.average_state_dicts(weights)
-    averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
-        model, averaged_weights)
-    model.load_state_dict(averaged_weights_wo_batch_stats)
-    interpolate.forward_pass(model, train_loader)
+    if 'layernorm' not in model_hparams.model_name:
+        averaged_weights_wo_batch_stats = state_dict.get_state_dict_wo_batch_stats(
+            model, averaged_weights)
+        model.load_state_dict(averaged_weights_wo_batch_stats)
+        interpolate.forward_pass(model, train_loader)
+    else:
+        print('not running warming stage')
+        model.load_state_dict(averaged_weights)
 
     if optimizer_weights == None:
         optimizer = None
