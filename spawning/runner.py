@@ -138,6 +138,27 @@ class SpawningRunner(Runner):
                 child_step,
                 children_weights,
                 children_optimizer_weights)
+            
+    def _avg_across_with_ema(self, parent_step):
+        print(f'avg across with ema for {parent_step.ep_it_str}')
+        children_steps = self.desc.saved_steps
+        avg_location = self.spawn_step_children_location(parent_step, self.children_data_order_seeds, part='avg_across_with_ema')
+
+        for child_step in children_steps:
+            if models.registry.model_exists(avg_location, child_step) and is_logger_info_saved(avg_location, child_step):
+                print('not running average')
+                continue
+            children_weights = []
+            for seed_i in self.children_data_order_seeds:
+                child_weights = environment.load(paths.ema_warm(
+                    self.spawn_step_child_location(parent_step, seed_i, part='ema'), child_step))
+                children_weights.append(child_weights)
+            standard_average(self.desc.dataset_hparams,
+                self.desc.model_hparams,
+                self.desc.training_hparams,
+                avg_location,
+                child_step,
+                children_weights)
     
     def _avg_back(self, parent_step):
         print(f'avg back for {parent_step.ep_it_str}')
@@ -290,12 +311,14 @@ class SpawningRunner(Runner):
             spawn_step = self.desc.saved_steps[spawn_step_i]
             for data_order_seed in self.children_data_order_seeds:
                 self._spawn_and_train(spawn_step, data_order_seed)
+                if self.ema:
+                    self._spawn_and_train_ema(spawn_step, data_order_seed)
             self._avg_across(spawn_step)
+            if self.ema:
+                self._avg_across_with_ema(spawn_step)
             # self._avg_back(spawn_step)
             # self._avg_back_plus_one(spawn_step)
             self._avg_back_plus_three(spawn_step)
-            if self.ema:
-               self._spawn_and_train_ema(spawn_step, self.children_data_order_seeds[0])
             # self._avg_back_all(spawn_step)
 
     def train_location(self):

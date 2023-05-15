@@ -176,7 +176,9 @@ def standard_ema_callbacks(
         run_at_log_base_2_steps_dense(save_state_dicts, end),
         run_every_epoch(checkpointing.save_checkpoint_callback),
         save_ema_callback,
-        run_at_log_base_2_steps_dense(warm_ema_callback, end)
+        run_at_log_base_2_steps_dense(warm_ema_callback, end),
+        run_at_step(start, warm_ema_callback),
+        run_at_step(end, warm_ema_callback),
     ]
     
     result = result + [

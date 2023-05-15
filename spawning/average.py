@@ -4,7 +4,7 @@ from environment import environment
 from foundations import paths
 from foundations.hparams import DatasetHparams, ModelHparams, TrainingHparams
 from foundations.step import Step
-from foundations.callbacks import create_eval_callback, save_logger
+from foundations.callbacks import create_eval_callback, save_logger, save_model
 import models.registry
 from training import optimizers
 from training.callbacks import save_state_dicts
@@ -19,7 +19,7 @@ def average(
     train_loader: DataLoader,
     step: Step,
     weights,
-    optimizer_weights
+    optimizer_weights = None
     ):
     """average models at some step across multiple seeds"""
     environment.exists_or_makedirs(output_location)
@@ -35,9 +35,12 @@ def average(
     model.load_state_dict(averaged_weights_wo_batch_stats)
     interpolate.forward_pass(model, train_loader)
 
-    averaged_optimizer_weights = interpolate.average_optimizer_state_dicts(optimizer_weights)
-    optimizer = optimizers.get_optimizer(model, training_hparams)
-    optimizer.load_state_dict(averaged_optimizer_weights)
+    if optimizer_weights == None:
+        optimizer = None
+    else:
+        averaged_optimizer_weights = interpolate.average_optimizer_state_dicts(optimizer_weights)
+        optimizer = optimizers.get_optimizer(model, training_hparams)
+        optimizer.load_state_dict(averaged_optimizer_weights)
 
     for callback in callbacks: callback(
         output_location,
@@ -54,15 +57,17 @@ def standard_average(
     output_location: str,
     step: Step,
     weights,
-    optimizer_weights,
-    dont_save_models = False
+    optimizer_weights = None,
+    dont_save_models = False,
 ):
     train_loader = datasets.registry.get(dataset_hparams)
     test_loader = datasets.registry.get(dataset_hparams, False)
     test_eval_callback = create_eval_callback('test', test_loader)
     train_eval_callback = create_eval_callback('train', train_loader)
     callbacks = [test_eval_callback, train_eval_callback, save_logger]
-    if not dont_save_models:
+    if optimizer_weights == None:
+        callbacks = [save_model] + callbacks
+    elif not dont_save_models:
         callbacks = [save_state_dicts] + callbacks
 
     return average(model_hparams, training_hparams, output_location, callbacks, train_loader, step, weights, optimizer_weights)
