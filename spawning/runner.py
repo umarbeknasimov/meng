@@ -12,6 +12,7 @@ from spawning.average import standard_average
 from spawning.desc import SpawningDesc
 from training import train
 import models.registry
+from training.callbacks import standard_ema_callbacks
 
 @dataclass
 class SpawningRunner(Runner):
@@ -93,7 +94,7 @@ class SpawningRunner(Runner):
     def _spawn_and_train_ema(self, spawn_step, data_order_seed):
         print('ema')
         training_hparams = TrainingHparams.create_from_instance_and_dict(
-            self.desc.training_hparams, {'data_order_seed': data_order_seed, 'optimizer_name': 'lookahead'})
+            self.desc.training_hparams, {'data_order_seed': data_order_seed})
         output_location = self.spawn_step_child_location(spawn_step, data_order_seed, part='ema')
         environment.exists_or_makedirs(output_location)
         print(f'child at spawn step {spawn_step.ep_it_str} with seed {data_order_seed}')
@@ -102,7 +103,13 @@ class SpawningRunner(Runner):
             return
         print(f'child doesn\'t exist so running train')
         model = models.registry.get(self.desc.model_hparams, self.model_num_classes).to(environment.device())
-        train.standard_train(model, output_location, self.desc.dataset_hparams, training_hparams, self.train_location(), spawn_step)
+        train_loader = datasets.registry.get(self.desc.dataset_hparams, train=True)
+        test_loader = datasets.registry.get(self.desc.dataset_hparams, train=False)
+        callbacks = standard_ema_callbacks(
+            training_hparams, train_loader, test_loader, model_hparams=self.desc.model_hparams)
+        train.train(model, training_hparams, train_loader, 
+              output_location, callbacks, pretrained_output_location=self.train_location(), 
+              pretrained_step=spawn_step)
     
     def _avg_across(self, parent_step):
         print(f'avg across for {parent_step.ep_it_str}')

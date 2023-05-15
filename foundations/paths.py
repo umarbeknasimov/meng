@@ -14,6 +14,10 @@ def plane_grid(root): return os.path.join(root, 'plane_grid')
 
 def checkpoint(root): return os.path.join(root, 'checkpoint.pth')
 
+def ema(root): return os.path.join(root, f'ema.pth')
+
+def ema_warm(root, step): return os.path.join(root, f'ema_warm{_step(step)}.pth')
+
 def hparams(root): return os.path.join(root, 'hparams')
 
 def optim(root, step): return os.path.join(root, f'optim{_step(step)}.pth')

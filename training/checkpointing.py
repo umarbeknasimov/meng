@@ -14,6 +14,16 @@ def save_checkpoint_callback(output_location, step, model, optimizer, scheduler,
         'logger': str(logger)
     }, paths.checkpoint(output_location))
 
+def save_ema_callback(output_location, step, model, optimizer, scheduler, logger):
+    environment.save({
+        'model': model.state_dict(),
+        'optimizer': optimizer.state_dict(),
+        'scheduler': None if scheduler is None else scheduler.state_dict(),
+        'ep': step.ep,
+        'it': step.it,
+        'logger': str(logger)
+    }, paths.checkpoint(output_location))
+
 def restore_checkpoint(output_location, model, optimizer, scheduler, iterations_per_epoch):
     checkpoint_location = paths.checkpoint(output_location)
     if not environment.exists(checkpoint_location):
