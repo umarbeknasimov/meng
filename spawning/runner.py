@@ -316,7 +316,7 @@ class SpawningRunner(Runner):
             self._avg_across(spawn_step)
             if self.ema:
                 self._avg_across_with_ema(spawn_step)
-            # self._avg_back(spawn_step)
+            self._avg_back(spawn_step)
             # self._avg_back_plus_one(spawn_step)
             self._avg_back_plus_three(spawn_step)
             # self._avg_back_all(spawn_step)
