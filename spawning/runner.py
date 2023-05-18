@@ -165,9 +165,8 @@ class SpawningRunner(Runner):
         zero_step = Step.zero(datasets.registry.get_iterations_per_epoch(self.desc.dataset_hparams))
         children_steps = self.desc.saved_steps
         for child_step in children_steps:
-            avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_with_ema')
             for seed_i in self.children_data_order_seeds:
-                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back')
+                avg_location = self.spawn_step_child_location(parent_step, seed_i, part='avg_back_with_ema')
                 if models.registry.model_exists(avg_location, child_step) and is_logger_info_saved(avg_location, child_step):
                     print('not running average')
                     continue
