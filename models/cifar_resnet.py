@@ -79,7 +79,7 @@ class Model(nn.Module):
     def get_model_from_name(model_name,  outputs=10):
         """The naming scheme for a ResNet is 'cifar_resnet_N[_W]'.
         The ResNet is structured as an initial convolutional layer followed by three "segments"
-        and a linear output layer. Each segment consists of D blocks. Each block is two
+    and a linear output layer. Each segment consists of D blocks. Each block is two
         convolutional layers surrounded by a residual connection. Each layer in the first segment
         has W filters, each layer in the second segment has 32W filters, and each layer in the
         third segment has 64W filters.

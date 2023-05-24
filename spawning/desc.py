@@ -75,18 +75,10 @@ class SpawningDesc(desc.Desc):
     
     def _train_dataset_steps(self):
         iterations_per_epoch = datasets.registry.get(self.dataset_hparams).iterations_per_epoch
-        return [Step.zero(iterations_per_epoch)] + Step.get_log_2_steps(self.train_end_step)
-    
-    def _train_dataset_steps_dense(self):
-        iterations_per_epoch = datasets.registry.get(self.dataset_hparams).iterations_per_epoch
         return sorted(list(set([Step.zero(iterations_per_epoch)] + Step.get_log_2_steps_dense(self.train_end_step) + [Step.from_str(self.training_hparams.training_steps, iterations_per_epoch)])))
 
     @property
     def saved_steps(self):
-        return self._train_dataset_steps_dense()
-
-    @property
-    def old_saved_steps(self):
         return self._train_dataset_steps()
 
     

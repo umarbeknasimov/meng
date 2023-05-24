@@ -36,11 +36,11 @@ class TrainingDesc(desc.Desc):
             experiment, 
             self.hashname))
 
-    def _train_dataset_steps_dense(self):
+    def _train_dataset_steps(self):
         iterations_per_epoch = datasets.registry.get(self.dataset_hparams).iterations_per_epoch
         end_step = Step.from_str(self.training_hparams.training_steps, iterations_per_epoch)
         return [Step.zero(iterations_per_epoch)] + Step.get_log_2_steps_dense(end_step) + [end_step]
 
     @property
     def saved_steps(self):
-        return self._train_dataset_steps_dense()
+        return self._train_dataset_steps()

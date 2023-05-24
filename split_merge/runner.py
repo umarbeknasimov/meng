@@ -1,7 +1,6 @@
 # children_seeds: list[int]
-# s: number of steps to train per parent/child leg
-    # can make this part of the training_hparams
-# c: number of legs
+# number of steps to train per parent/child leg: can make this part of the training_hparams
+# num_legs: number of legs
 
 # dir:
     # legs
@@ -124,18 +123,6 @@ class SplitMergeRunner:
     def _merge_children(self, leg_i):
         indent = " " * 2
         print(f'{indent}running average')
-        # merge & save model state, optim state
-        # output_location = self.avg_location(leg_i)
-        # environment.exists_or_makedirs(output_location)
-        # if models.registry.model_exists(output_location, self.child_train_end_step(leg_i)) and is_logger_info_saved(output_location, self.child_train_end_step(leg_i)):
-        #     print(f'{indent}average already exists')
-        #     return
-
-        # standard_average(
-        #     self.desc.dataset_hparams, self.desc.model_hparams, self.desc.training_hparams,
-        #     self.avg_location(leg_i), self.leg_i_location(leg_i), 
-        #     self.children_data_order_seeds, self.child_train_end_step(leg_i))
-
         output_location = self.avg_location(leg_i)
         step = self.child_train_end_step(leg_i)
 
@@ -173,13 +160,7 @@ class SplitMergeRunner:
         return training_hparams
     
     def child_dataset_hparams(self, leg_i):
-        if self.desc.strategy == 'subsample':
-            dataset_hparams = DatasetHparams.create_from_instance_and_dict(
-                self.desc.dataset_hparams, 
-                {
-                    'subsample_fraction': 1/len(self.children_data_order_seeds)
-                })
-        elif self.desc.strategy == 'increase_batch_size':
+        if self.desc.strategy == 'repeat_increase_batch_size':
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
@@ -196,7 +177,7 @@ class SplitMergeRunner:
         return dataset_hparams
     
     def parent_dataset_hparams(self, leg_i):
-        if self.desc.strategy == 'increase_batch_size':
+        if self.desc.strategy == 'repeat_increase_batch_size':
             dataset_hparams = DatasetHparams.create_from_instance_and_dict(
                 self.desc.dataset_hparams, 
                 {
