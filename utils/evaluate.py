@@ -32,7 +32,7 @@ def evaluate(model, loader: DataLoader):
             if (len(curr_ids_correct.shape) == 2):
                 curr_ids_correct = curr_ids_correct.squeeze(dim=1)
             # print(((torch.ones(curr_ids_correct.shape) * i * ids_multiplier_offset)))
-            correct_ids.extend((curr_ids_correct + ((torch.ones(curr_ids_correct.shape) * i * ids_multiplier_offset))).int().tolist())
+            correct_ids.extend((curr_ids_correct + ((torch.ones(curr_ids_correct.shape).to(environment.device()) * i * ids_multiplier_offset))).int().tolist())
     print(correct_ids)
     return losses.avg, top1.avg, correct_ids
 
