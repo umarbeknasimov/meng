@@ -28,7 +28,7 @@ class TestTrain(test_case.TestCase):
         self.it = 0
         self.lr = 0.0
 
-        def callback(output_location, step, model, optimizer, scheduler, logger):
+        def callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
             self.step_counter += 1
             self.ep, self.it = step.ep, step.it
             self.lr = np.round(optimizer.param_groups[0]['lr'], 10)

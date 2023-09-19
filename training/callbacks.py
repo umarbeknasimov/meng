@@ -18,66 +18,66 @@ from utils.interpolate import interpolate_state_dicts_from_weights
 
 #callback frequencies
 def run_every_epoch(callback):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step.it != 0:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_every_x_iters_for_first_y_epochs(iters, epochs, callback):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step.it % iters != 0 or step.ep > epochs:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_every_step(callback):
     return callback
 
 def run_at_step(target_step, callback):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step != target_step:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_at_steps(target_steps, callback):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step not in target_steps:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_at_log_base_2_steps(callback):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step.iteration == 0:
             return
         log_base_2 = math.log2(step.iteration)
         if (math.ceil(log_base_2) != math.floor(log_base_2)):
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_at_every_x_steps(callback, x):
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step.iteration % x != 0:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
 def run_at_log_base_2_steps_dense(callback, end_step: Step):
     # - Regular: 0, 1, 2, 4, 8, 16, 32, 64, ...
     # - Dense: 0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, ...
     steps_in_iterations = set([step_i.iteration for step_i in Step.get_log_2_steps_dense(end_step)])
-    def modified_callback(output_location, step, model, optimizer, scheduler, logger):
+    def modified_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         if step.iteration not in steps_in_iterations:
             return
-        callback(output_location, step, model, optimizer, scheduler, logger)
+        callback(output_location, step, model, optimizer, scheduler, logger, ids_logger)
     return modified_callback
 
-def save_state_dicts(output_location, step, model, optimizer, scheduler, logger):
-    save_optim(output_location, step, model, optimizer, scheduler, logger)
-    save_model(output_location, step, model, optimizer, scheduler, logger)
+def save_state_dicts(output_location, step, model, optimizer, scheduler, logger, ids_logger):
+    save_optim(output_location, step, model, optimizer, scheduler, logger, ids_logger)
+    save_model(output_location, step, model, optimizer, scheduler, logger, ids_logger)
 
 def standard_callbacks(
     args: TrainingHparams,
@@ -115,7 +115,7 @@ def standard_callbacks(
     return result
 
 
-def save_ema_callback(output_location, step, model, optimizer, scheduler, logger):
+def save_ema_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
     if step.iteration == 0:
         environment.save(model.state_dict(), paths.ema(output_location))
         return
@@ -126,7 +126,7 @@ def save_ema_callback(output_location, step, model, optimizer, scheduler, logger
     environment.save(new_ema_weights, paths.ema(output_location))
 
 def create_warm_ema_callback(train_set_loader: DataLoader, model_hparams: ModelHparams):
-    def warm_ema_callback(output_location, step, model, optimizer, scheduler, logger):
+    def warm_ema_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         ema_weights = environment.load(paths.ema(output_location))
 
         ema_model = models.registry.get(model_hparams).to(environment.device())
@@ -139,12 +139,12 @@ def create_warm_ema_callback(train_set_loader: DataLoader, model_hparams: ModelH
     return warm_ema_callback
 
 def create_ema_eval_callback(eval_name: str, loader: DataLoader, model_hparams: ModelHparams):
-    def eval_ema_callback(output_location, step, model, optimizer, scheduler, logger):
+    def eval_ema_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
         ema_weights = environment.load(paths.ema_warm(output_location, step))
         ema_model = models.registry.get(model_hparams).to(environment.device())
         ema_model.load_state_dict(ema_weights)
         ema_model.eval()
-        loss, accurary = evaluate(ema_model, loader)
+        loss, accurary, _ = evaluate(ema_model, loader)
 
         logger.add('{}_loss'.format(eval_name), step, loss)
         logger.add('{}_accuracy'.format(eval_name), step, accurary)

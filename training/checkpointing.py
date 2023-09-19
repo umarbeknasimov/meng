@@ -1,24 +1,26 @@
 from foundations import paths
 from foundations.step import Step
 from models.registry import get_model_state_dict, get_optim_state_dict
+from training.ids_logger import IdsLogger
 from training.metric_logger import MetricLogger
 from environment import environment
 
-def save_checkpoint_callback(output_location, step, model, optimizer, scheduler, logger):
+def save_checkpoint_callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
     environment.save({
         'model': model.state_dict(),
         'optimizer': optimizer.state_dict(),
         'scheduler': None if scheduler is None else scheduler.state_dict(),
         'ep': step.ep,
         'it': step.it,
-        'logger': str(logger)
+        'logger': str(logger),
+        'ids_logger': str(ids_logger)
     }, paths.checkpoint(output_location))
 
 def restore_checkpoint(output_location, model, optimizer, scheduler, iterations_per_epoch):
     checkpoint_location = paths.checkpoint(output_location)
     if not environment.exists(checkpoint_location):
         print('not using checkpoint')
-        return None, None
+        return None, None, None
     checkpoint = environment.load(checkpoint_location)
 
     model.load_state_dict(checkpoint['model'])
@@ -27,8 +29,9 @@ def restore_checkpoint(output_location, model, optimizer, scheduler, iterations_
         scheduler.load_state_dict(checkpoint['scheduler'])
     step = Step.from_epoch(checkpoint['ep'], checkpoint['it'], iterations_per_epoch)
     logger = MetricLogger.create_from_str(checkpoint['logger'])
+    ids_logger = IdsLogger.create_from_str(checkpoint['ids_logger'])
     print(f'using check at step {step.ep_it_str}')
-    return step, logger
+    return step, logger, ids_logger
 
 def load_pretrained(pretrained_output_location, pretrained_step, model, optimizer, scheduler, load_only_model_weights = False):
     model_state_dict = get_model_state_dict(pretrained_output_location, pretrained_step)

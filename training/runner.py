@@ -14,7 +14,6 @@ from training.desc import TrainingDesc
 @dataclass
 class TrainingRunner(Runner):
     training_desc: TrainingDesc
-    save_dense: bool = False
     experiment: str = 'main'
     eval_every_10: bool = False
     

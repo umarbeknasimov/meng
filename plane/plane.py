@@ -78,7 +78,7 @@ def evaluate_plane(weights1, weights2, weights3, output_location, model_hparams,
         model.load_state_dict(state_dict_new)
         interpolate.forward_pass(model, train_data)
         model.eval()
-        loss, acc = evaluate.evaluate(model, dataloader)
+        loss, acc, _ = evaluate.evaluate(model, dataloader)
         
         metrics[loss_name][i][j] = loss
         metrics[accuracy_name][i][j] = acc

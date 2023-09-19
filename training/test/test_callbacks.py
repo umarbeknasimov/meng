@@ -10,7 +10,7 @@ class TestCallbacks(test_case.TestCase):
         super(TestCallbacks, self).setUp()
         self.iterations_per_epoch = 50
         self.saved_steps = set()
-        def callback(output_location, step, model, optimizer, scheduler, logger):
+        def callback(output_location, step, model, optimizer, scheduler, logger, ids_logger):
             self.saved_steps.add(step)
         
         self.callback = callback

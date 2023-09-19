@@ -4,6 +4,8 @@ def _step(step): return step.ep_it_str
 
 def logger(root): return os.path.join(root, 'logger')
 
+def ids_logger(root): return os.path.join(root, 'ids_logger')
+
 def plane_metrics(root): return os.path.join(root, 'plane_metrics')
 
 def lookahead_metrics(root, seed): return os.path.join(root, f'lookahead_metrics_{seed}')

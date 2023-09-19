@@ -1,12 +1,15 @@
 import torch
 import torch.nn as nn
+from datasets.base import DataLoader
 from utils.average import AverageMeter
 from environment import environment
 
-def evaluate(model, loader):
+def evaluate(model, loader: DataLoader):
     criterion = nn.CrossEntropyLoss()
     losses = AverageMeter()
     top1 = AverageMeter()
+    correct_ids = []
+    ids_multiplier_offset = int(loader.batch_size)
     
     with torch.no_grad():
         for i, (input, target) in enumerate(loader):                
@@ -24,7 +27,14 @@ def evaluate(model, loader):
             prec1 = accuracy(output.data, target)[0]
             losses.update(loss.cpu().item(), input.cpu().size(0))
             top1.update(prec1.cpu().item(), input.cpu().size(0))
-    return losses.avg, top1.avg
+
+            curr_ids_correct = ((output.data.argmax(-1) == target) == True).nonzero()
+            if (len(curr_ids_correct.shape) == 2):
+                curr_ids_correct = curr_ids_correct.squeeze(dim=1)
+            # print(((torch.ones(curr_ids_correct.shape) * i * ids_multiplier_offset)))
+            correct_ids.extend((curr_ids_correct + ((torch.ones(curr_ids_correct.shape) * i * ids_multiplier_offset))).int().tolist())
+    print(correct_ids)
+    return losses.avg, top1.avg, correct_ids
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""

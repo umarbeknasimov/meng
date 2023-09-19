@@ -5,6 +5,7 @@ from foundations.step import Step
 import models.registry
 from testing import test_case
 from training import callbacks, checkpointing, optimizers
+from training.ids_logger import IdsLogger
 from training.metric_logger import MetricLogger
 
 
@@ -26,11 +27,12 @@ class TestCheckpointing(test_case.TestCase):
         scheduler.step()
 
         logger = MetricLogger()
+        ids_logger = IdsLogger()
         logger.add('test_accuracy', Step.from_epoch(0, 0, 400), 0.1)
         logger.add('test_accuracy', Step.from_epoch(10, 0, 400), 0.5)
         logger.add('test_accuracy', Step.from_epoch(100, 0, 400), 0.8)
 
-        checkpointing.save_checkpoint_callback(self.root, step, model, optimizer, scheduler, logger)
+        checkpointing.save_checkpoint_callback(self.root, step, model, optimizer, scheduler, logger, ids_logger)
         self.assertTrue(environment.exists(paths.checkpoint(self.root)))
 
         # new model
@@ -67,9 +69,10 @@ class TestCheckpointing(test_case.TestCase):
         optimizer.step()
 
         logger = MetricLogger()
+        ids_logger = IdsLogger()
         logger.add('test_accuracy', Step.from_epoch(0, 0, 400), 0.1)
 
-        checkpointing.save_checkpoint_callback(self.root, step, model, optimizer, None, logger)
+        checkpointing.save_checkpoint_callback(self.root, step, model, optimizer, None, logger, ids_logger)
         self.assertTrue(environment.exists(paths.checkpoint(self.root)))
 
         # new model

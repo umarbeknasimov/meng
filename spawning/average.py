@@ -8,6 +8,7 @@ from foundations.callbacks import create_eval_callback, save_logger, save_model
 import models.registry
 from training import optimizers
 from training.callbacks import save_state_dicts
+from training.ids_logger import IdsLogger
 from training.metric_logger import MetricLogger
 from utils import state_dict, interpolate
 
@@ -27,6 +28,11 @@ def average(
         logger = MetricLogger.create_from_file(output_location)
     else:
         logger = MetricLogger()
+    
+    if environment.exists(paths.logger(output_location)):
+        ids_logger = IdsLogger.create_from_file(output_location)
+    else:
+        ids_logger = IdsLogger()
 
     model = models.registry.get(model_hparams, train_loader.dataset.num_classes()).to(environment.device())
     averaged_weights = interpolate.average_state_dicts(weights)
@@ -52,7 +58,8 @@ def average(
         model,
         optimizer,
         None,
-        logger)
+        logger,
+        ids_logger)
 
 def standard_average(
     dataset_hparams: DatasetHparams,
